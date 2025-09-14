@@ -3,36 +3,36 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Lesson;
-use App\Models\Teacher;
-use App\Models\LessonSlot;
+use App\Models\Service;
+use App\Models\Provider;
+use App\Models\ServiceSlot;
 use Carbon\Carbon;
 
-class LessonSeeder extends Seeder
+class ServiceSeeder extends Seeder
 {
     public function run()
 {
-    $teachers = Teacher::all();
+    $providers = Provider::all();
 
-    if ($teachers->isEmpty()) {
-        $this->command->info('No teachers found. Please seed teachers first.');
+    if ($providers->isEmpty()) {
+        $this->command->info('No providers found. Please seed providers first.');
         return;
     }
 
-    $lessons = [
+    $services = [
         [
-            'title' => 'Introduction to Algebra',
-            'description' => "Master the basics of algebra including:\n\n- Variables\n- Equations\n- Simplifying expressions\n\nPerfect for students who want a solid foundation in math.",
+            'title' => 'Glow Facial Therapy',
+            'description' => "A revitalizing facial designed to deeply cleanse and rehydrate the skin. This treatment combines gentle exfoliation, nourishing masks, and a soothing massage to leave your skin glowing and refreshed. Ideal for tired or dull complexions.",
             'phone' => '+371 20000001',
             'price' => 15,
-            'labels' => ['Math', 'Algebra'],
+            'labels' => ['Facial', 'Skincare'],
         ],
         [
-            'title' => 'English Conversation Practice',
-            'description' => "Improve your spoken English through:\n\n- Role-playing real-life scenarios\n- Vocabulary building\n- Confidence exercises\n\nGreat for beginners and intermediate learners.",
+            'title' => 'Luxury Gel Manicure',
+            'description' => "Treat your hands to a full manicure with nail shaping, cuticle care, and a high-quality gel polish. The treatment is finished with a relaxing hand massage for ultimate softness. Perfect for long-lasting shine and elegance.",
             'phone' => '+371 20000002',
             'price' => 12,
-            'labels' => ['English', 'Language'],
+            'labels' => ['Nails', 'Manicure'],
         ],
         [
             'title' => 'Latvian for Beginners',
@@ -43,7 +43,7 @@ class LessonSeeder extends Seeder
         ],
         [
             'title' => 'Biology: Human Body Systems',
-            'description' => "Dive into the structure and function of the human body. Understand key systems like:\n\n- Circulatory\n- Nervous\n- Digestive\n\nIdeal for middle/high school science students.",
+            'description' => "Dive into the structure and function of the human body. Understand key systems like:\n\n- Circulatory\n- Nervous\n- Digestive\n\nIdeal for middle/high school science regusers.",
             'phone' => '+371 20000004',
             'price' => 18,
             'labels' => ['Biology', 'Science'],
@@ -85,23 +85,23 @@ class LessonSeeder extends Seeder
         ],
         [
             'title' => 'Guitar for Absolute Beginners',
-            'description' => "Start playing in your first lesson:\n\n🎸 Learn:\n- Basic chords\n- Strumming patterns\n- Easy songs\n\nBring your own guitar or borrow one in class.",
+            'description' => "Start playing in your first service:\n\n🎸 Learn:\n- Basic chords\n- Strumming patterns\n- Easy songs\n\nBring your own guitar or borrow one in class.",
             'phone' => '+371 20000010',
             'price' => 17,
             'labels' => ['Music', 'Leisure'],
         ],
     ];
 
-    foreach ($lessons as $lessonData) {
-        $randomTeacher = $teachers->random();
+    foreach ($services as $serviceData) {
+        $randomProvider = $providers->random();
 
-        $lesson = Lesson::create(array_merge($lessonData, [
-            'teacher_id' => $randomTeacher->id,
+        $service = Service::create(array_merge($serviceData, [
+            'provider_id' => $randomProvider->id,
         ]));
 
         for ($i = 1; $i <= 3; $i++) {
-            LessonSlot::create([
-                'lesson_id' => $lesson->id,
+            ServiceSlot::create([
+                'service_id' => $service->id,
                 'date' => Carbon::now()->addDays($i)->format('Y-m-d'),
                 'time' => '15:00',
                 'is_available' => true,
@@ -109,7 +109,7 @@ class LessonSeeder extends Seeder
         }
     }
 
-    $this->command->info('10 lessons seeded and assigned to random teachers.');
+    $this->command->info('10 services seeded and assigned to random providers.');
 }
 
 }

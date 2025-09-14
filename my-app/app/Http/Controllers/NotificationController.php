@@ -1,6 +1,9 @@
 <?php
 
 // app/Http/Controllers/NotificationController.php
+// lesons DONE
+//providers
+// reguser
 
 namespace App\Http\Controllers;
 
@@ -21,8 +24,8 @@ class NotificationController extends Controller
                 return [
                     'id' => $note->id,
                     'type' => $note->type,
-                    'lesson_title' => $note->lesson_title,
-                    'student_name' => $note->student_name,
+                    'service_title' => $note->service_title,
+                    'reguser_name' => $note->reguser_name,
                     'date' => $note->date,
                     'time' => $note->time,
                     'created_at' => $note->created_at->diffForHumans(),

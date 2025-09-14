@@ -9,18 +9,18 @@
           :key="note.id"
           class="p-4 border rounded bg-white shadow-sm"
         >
-          <div v-if="note.type === 'lesson_booked'">
-            📌 <strong>{{ note.student_name }}</strong> booked your lesson
-            "<em>{{ note.lesson_title }}</em>" on {{ note.date }} at {{ note.time }}.
+          <div v-if="note.type === 'service_booked'">
+            📌 <strong>{{ note.reguser_name }}</strong> booked your service
+            "<em>{{ note.service_title }}</em>" on {{ note.date }} at {{ note.time }}.
           </div>
 
           <div v-else-if="note.type === 'review_left'">
-            💬 <strong>{{ note.student_name }}</strong> left a review on
-            "<em>{{ note.lesson_title }}</em>".
+            💬 <strong>{{ note.reguser_name }}</strong> left a review on
+            "<em>{{ note.service_title }}</em>".
           </div>
 
           <div v-else-if="note.type === 'upcoming_reminder'">
-            ⏰ Reminder: Your lesson "<em>{{ note.lesson_title }}</em>" is on {{ note.date }} at {{ note.time }}.
+            ⏰ Reminder: Your service "<em>{{ note.service_title }}</em>" is on {{ note.date }} at {{ note.time }}.
           </div>
 
           <div class="text-sm text-gray-500 mt-1">

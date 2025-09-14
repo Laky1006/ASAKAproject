@@ -4,38 +4,38 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\Student;
+use App\Models\Reguser;
 use Illuminate\Support\Facades\Hash;
 
-class StudentSeeder extends Seeder
+class ReguserSeeder extends Seeder
 {
     public function run(): void
     {
-        $students = [
+        $regusers = [
             [
                 'name' => 'Alise Trololo',
-                'username' => 'alice_student',
+                'username' => 'alice_reguser',
                 'email' => 'alice@example.com',
                 'password' => 'Password1!',
-                'role' => 'student',
+                'role' => 'reguser',
             ],
             [
                 'name' => 'John Learner',
                 'username' => 'john123',
                 'email' => 'john@example.com',
                 'password' => 'Learning@1',
-                'role' => 'student',
+                'role' => 'reguser',
             ],
             [
                 'name' => 'Laura Curious',
                 'username' => 'curiouslaura',
                 'email' => 'laura@example.com',
                 'password' => 'Smart#456',
-                'role' => 'student',
+                'role' => 'reguser',
             ],
         ];
 
-        foreach ($students as $data) {
+        foreach ($regusers as $data) {
             $user = User::create([
                 'name' => $data['name'],
                 'username' => $data['username'],
@@ -44,7 +44,7 @@ class StudentSeeder extends Seeder
                 'role' => $data['role'],
             ]);
 
-            Student::create([
+            Reguser::create([
                 'user_id' => $user->id,
             ]);
         }

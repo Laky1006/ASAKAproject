@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class Review extends Model
 {
 
-    protected $fillable = ['lesson_id', 'student_id', 'rating', 'comment'];
-    public function student() {
-        return $this->belongsTo(Student::class);
+    protected $fillable = ['service_id', 'reguser_id', 'rating', 'comment'];
+    public function reguser() {
+        return $this->belongsTo(Reguser::class);
     }
 
-    public function lesson() {
-        return $this->belongsTo(Lesson::class);
+    public function service() {
+        return $this->belongsTo(Service::class);
     }
 }

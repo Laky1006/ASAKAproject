@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('student_id')->constrained()->onDelete('cascade');
-            $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
+            $table->foreignId('reguser_id')->constrained()->onDelete('cascade');
+            $table->foreignId('service_id')->constrained()->onDelete('cascade');
             $table->unsignedTinyInteger('rating'); // from 1 to 5
             $table->text('comment')->nullable();
             $table->timestamps();
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lesson_reviews');
+        Schema::dropIfExists('service_reviews');
     }
 };

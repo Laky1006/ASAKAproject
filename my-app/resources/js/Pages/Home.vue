@@ -2,7 +2,7 @@
     <MainLayout :user="auth.user">
 
     <section class="py-10 px-6 max-w-7xl mx-auto">
-        <h2 class="text-3xl font-bold mb-6">Available Lessons</h2>
+        <h2 class="text-3xl font-bold mb-6">Available Services</h2>
         
         <!-- Controls Row -->
         <div ref="filterContainer" class="flex flex-wrap items-center gap-4 mb-4 relative">
@@ -10,7 +10,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search lessons..."
+            placeholder="Search services..."
             class="px-4 py-2 w-full sm:w-1/3 rounded-full border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
           />
 
@@ -87,22 +87,22 @@
         </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                 <Link
-                  v-for="lesson in filteredLessons"
-                  :key="lesson.id"
-                  :href="route('lessons.show', lesson.id)"
+                  v-for="service in filteredServices"
+                  :key="service.id"
+                  :href="route('services.show', service.id)"
                   class="block overflow-hidden rounded-lg shadow transition duration-300 transform hover:scale-[1.02] hover:shadow-lg cursor-pointer bg-white"
                 >
                   <!-- Banner: full width, no padding or background -->
                   <img
-                    :src="lesson.banner ? `/storage/${lesson.banner}` : '/images/default-banner.jpg'"
-                    alt="Lesson Banner"
+                    :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
+                    alt="Service Banner"
                     class="w-full h-40 object-cover"
                   />
 
                   <!-- Card content on white -->
                   <div class="p-4 ">
-                    <h3 class="text-xl font-semibold mb-2">{{ lesson.title }}</h3>
-                    <p class="text-sm text-gray-600 mb-1">Teacher: {{ lesson.teacher?.user?.name || 'Unknown' }}</p>
+                    <h3 class="text-xl font-semibold mb-2">{{ service.title }}</h3>
+                    <p class="text-sm text-gray-600 mb-1">Provider: {{ service.provider?.user?.name || 'Unknown' }}</p>
 
                     <div class="flex items-center text-sm">
                       <div class="flex">
@@ -111,24 +111,24 @@
                           :key="n"
                           class="text-sm"
                           :class="{
-                            'text-yellow-500': lesson.rating >= n,
-                            'text-gray-300': lesson.rating < n
+                            'text-yellow-500': service.rating >= n,
+                            'text-gray-300': service.rating < n
                           }"
                         >★</span>
                       </div>
                       <span class="ml-2 text-gray-600">
-                        {{ lesson.rating ? `${lesson.rating}/5` : 'Not rated' }}
+                        {{ service.rating ? `${service.rating}/5` : 'Not rated' }}
                       </span>
 
                       
                     </div>
 
-                    <p class="text-sm text-gray-700 mt-2">Price: € {{ lesson.price ?? 'Free' }}</p>
+                    <p class="text-sm text-gray-700 mt-2">Price: € {{ service.price ?? 'Free' }}</p>
 
 
-                    <div v-if="lesson.labels?.length" class="flex flex-wrap gap-2 mt-2">
+                    <div v-if="service.labels?.length" class="flex flex-wrap gap-2 mt-2">
                       <span
-                        v-for="(label, i) in lesson.labels"
+                        v-for="(label, i) in service.labels"
                         :key="i"
                         class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-xs transition-opacity duration-300 hover:opacity-80"
                       >
@@ -156,7 +156,7 @@ export default {
     Link,
   },
   props: {
-    lessons: Array,
+    services: Array,
     auth: Object,
   },
   setup(props) {
@@ -235,16 +235,16 @@ export default {
       document.removeEventListener('click', handleClickOutside)
     })
 
-    const filteredLessons = computed(() => {
-      return props.lessons
-        .filter(lesson =>
-          lesson.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          lesson.teacher?.user?.name?.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const filteredServices = computed(() => {
+      return props.services
+        .filter(service =>
+          service.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          service.provider?.user?.name?.toLowerCase().includes(searchQuery.value.toLowerCase())
         )
-        .filter(lesson =>
+        .filter(service =>
           selectedLabels.value.length === 0 ||
           selectedLabels.value.every(label =>
-            (lesson.labels || []).includes(label)
+            (service.labels || []).includes(label)
           )
         )
         .sort((a, b) => {
@@ -269,7 +269,7 @@ export default {
       toggleFilterDropdown,
       toggleLabelFilter,
       removeLabelFilter,
-      filteredLessons,
+      filteredServices,
     }
   },
 }
@@ -279,7 +279,7 @@ export default {
 
 
 <style scoped>
-.lesson-card {
+.service-card {
   background: white;
   padding: 1rem;
   border-radius: 10px;

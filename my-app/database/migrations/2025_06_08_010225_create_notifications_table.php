@@ -13,13 +13,13 @@ return new class extends Migration
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Recipient
-            $table->string('type'); // e.g., 'lesson_booked', 'review_left', 'upcoming_reminder'
+            $table->string('type'); // e.g., 'service_booked', 'review_left', 'upcoming_reminder'
 
-            $table->foreignId('lesson_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('lesson_title')->nullable(); // cache
+            $table->foreignId('service_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('service_title')->nullable(); // cache
 
-            $table->foreignId('student_id')->nullable()->constrained()->onDelete('set null');
-            $table->string('student_name')->nullable(); // cache
+            $table->foreignId('reguser_id')->nullable()->constrained()->onDelete('set null');
+            $table->string('reguser_name')->nullable(); // cache
 
             $table->date('date')->nullable();
             $table->time('time')->nullable();

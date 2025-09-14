@@ -5,9 +5,9 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\Teacher;
+use App\Models\Provider;
 
-class TeacherSeeder extends Seeder
+class ProviderSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -17,28 +17,28 @@ class TeacherSeeder extends Seeder
         
         $users = [
             [
-                'name' => 'Test Teacher',
+                'name' => 'Test Provider',
                 'username' => 'test_',
                 'email' => 'test2025@example.com',
                 'password' => '12345678',
-                'role' => 'teacher',
+                'role' => 'provider',
             ],
             [
                 'name' => 'Bob Bobly',
-                'username' => 'bob_teacher',
+                'username' => 'bob_provider',
                 'email' => 'bob@example.com',
                 'password' => '12345678',
-                'role' => 'teacher',
+                'role' => 'provider',
             ],
         ];
 
         foreach ($users as $userData) {
             $user = User::create($userData);
 
-            Teacher::create([
+            Provider::create([
                 'user_id' => $user->id,
                 'education' => 'Master in Education',
-                'bio' => 'Experienced teacher in various subjects.',
+                'bio' => 'Experienced provider in various subjects.',
             ]);
         }
     }

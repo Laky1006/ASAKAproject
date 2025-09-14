@@ -1,0 +1,310 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use App\Models\Service;
+use Inertia\Inertia;
+use App\Models\ServiceSlot;
+use App\Models\Notification;
+
+
+class ServiceController extends Controller
+{
+    public function index()
+    {
+        //$services = Service::all();
+        $services = Service::with('provider.user')->get(); // eager load provider + user
+
+        return Inertia::render('Home', [
+            'services' => $services,
+        ]);
+    }
+
+    // Gets all the needed things to show on show.vue
+    public function show($id)
+    {
+        
+        $service = Service::with(['slots', 'reviews.reguser.user'])->findOrFail($id);
+
+        return Inertia::render('Services/Show', [
+            'service' => [
+                'id' => $service->id,
+                'title' => $service->title,
+                'description' => $service->description,
+                'phone' => $service->phone,
+                'rating' => $service->rating,
+                'banner' => $service->banner,
+                'price' => $service->price,
+                'slots' => $service->slots->map(function ($slot) {
+                    return [
+                        'date' => $slot->date->format('Y-m-d'), 
+                        'time' => $slot->time,
+                        'is_available' => $slot->is_available,
+                    ];
+                }),
+            ],
+
+            'reviews' => $service->reviews->map(function ($review) {
+                return [
+                    'id' => $review->id,
+                    'rating' => $review->rating,
+                    'comment' => $review->comment,
+                    'created_at' => $review->created_at->diffForHumans(),
+                    'reguser_id' => $review->reguser_id, 
+                    'reguser' => [
+                        'name' => $review->reguser->user->name ?? 'Unknown',
+                        'avatar' => $review->reguser->user->avatar ?? null,
+                    ],
+                ];
+            }),
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Services/CreateService');
+    }
+
+    // works new service creation on provider side
+    public function store(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'phone' => 'nullable|string|max:20',
+            'available_slots' => 'nullable|array',
+            'available_slots.*.date' => 'required_with:available_slots|date',
+            'available_slots.*.time' => 'required_with:available_slots|date_format:H:i',
+            'banner' => 'nullable|image|max:2048',
+            'labels' => 'nullable|array',
+            'labels.*' => 'string|max:50',
+            'price' => 'nullable|numeric|min:0|max:10000',
+        ]);
+
+        $data['labels'] = $request->labels ?? [];
+
+        $provider = auth()->user()->provider;
+        if (!$provider) abort(403, 'Only providers can create services.');
+
+        $data = [
+            'title' => $request->title,
+            'description' => $request->description,
+            'phone' => $request->phone,
+            'price' => $request->price,
+            'provider_id' => $provider->id,
+        ];
+
+        if ($request->hasFile('banner')) {
+            $data['banner'] = $request->file('banner')->store('service-banners', 'public');
+        }
+
+        $service = Service::create($data);
+
+        // Save slots
+        foreach ($request->available_slots ?? [] as $slot) {
+            ServiceSlot::create([
+                'service_id' => $service->id,
+                'date' => $slot['date'],
+                'time' => $slot['time'],
+                'is_available' => true,
+            ]);
+        }
+
+        return redirect()->route('my-services')->with('success', 'Service created successfully.');
+    }
+
+    
+    // works reguser booking ()
+    public function book(Request $request, $serviceId)
+{
+    if (!auth()->user()?->reguser) {
+        session()->flash('debug', 'User is not a reguser');
+        return back();
+    }
+
+    $reguserId = auth()->user()->reguser->id;
+
+    $service = Service::with('provider.user')->findOrFail($serviceId);
+
+    $slot = ServiceSlot::where('service_id', $serviceId)
+        ->where('date', $request->date)
+        ->where('time', $request->time)
+        ->where('is_available', true)
+        ->first();
+
+    if (!$slot) {
+        session()->flash('debug', 'Slot not found or already booked');
+        return back();
+    }
+
+    $slot->is_available = false;
+    $slot->reguser_id = $reguserId;
+    $slot->save();
+
+    session()->flash('success', 'You have signed up for this service!');
+    session()->flash('debug', "Booked slot ID: {$slot->id}, reguser ID: {$reguserId}");
+
+    
+    Notification::create([
+        'user_id' => $service->provider->user->id,
+        'type' => 'service_booked',
+        'service_id' => $service->id,
+        'service_title' => $service->title,
+        'reguser_id' => $reguserId,
+        'reguser_name' => auth()->user()->name,
+        'date' => $request->date,
+        'time' => $request->time,
+    ]);
+
+    return back();
+}
+
+    // get only the services this tsudent has signed up for
+
+    public function reguserServices()
+    {
+        $reguserId = auth()->user()->reguser->id;
+
+        $slots = \App\Models\ServiceSlot::with('service.provider.user')
+            ->where('reguser_id', $reguserId)
+            ->orderBy('date')
+            ->orderBy('time')
+            ->get();
+
+        $services = $slots->map(function ($slot) {
+            $service = $slot->service;
+            return [
+                'id' => $service->id,
+                'title' => $service->title,
+                'banner' => $service->banner,
+                'provider' => $service->provider->user->name ?? 'Unknown',
+                'date' => $slot->date->format('Y-m-d'),
+                'time' => $slot->time,
+            ];
+        });
+
+        return Inertia::render('Services/ReguserServices', [
+            'services' => $services,
+        ]);
+    }
+
+    // cancels services, make them avilable in database again
+    public function cancel(Request $request)
+    {
+        
+
+        $reguserId = auth()->user()?->reguser?->id;
+
+        if (!$reguserId) {
+            return back()->withErrors(['error' => 'Only regusers can cancel services.']);
+        }
+
+        $slot = ServiceSlot::where('service_id', $request->service_id)
+            ->where('date', $request->date)
+            ->where('time', $request->time)
+            ->where('reguser_id', $reguserId)
+            ->first();
+
+        if (!$slot) {
+            return back()->withErrors(['error' => 'Booking not found.']);
+        }
+
+        $slot->reguser_id = null;
+        $slot->is_available = true;
+        $slot->save();
+
+        return back()->with('success', 'Service booking canceled.');
+    }
+
+    // works service editing on provider side
+    public function edit($id)
+    {
+        
+        $service = Service::findOrFail($id);
+
+        // Ensure the logged-in provider owns the service
+        if ($service->provider_id !== auth()->user()->provider->id) {
+            abort(403);
+        }
+
+        return Inertia::render('Services/EditService', [
+            'service' => [
+                'id' => $service->id,
+                'title' => $service->title,
+                'description' => $service->description,
+                'phone' => $service->phone,
+                'price' => $service->price,
+                'banner' => $service->banner,
+                'slots' => $service->slots->map(fn($slot) => [
+                    'date' => $slot->date->format('Y-m-d'),
+                    'time' => $slot->time,
+                ]),
+                'labels' => $service->labels ?? [],
+            ],
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        
+        $service = Service::findOrFail($id);
+
+        // Ensure the logged-in provider owns this service
+        if ($service->provider_id !== auth()->user()->provider->id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'phone' => 'required|string|max:20',
+            'banner' => 'nullable|image|max:2048',
+            'price' => 'nullable|numeric|min:0|max:10000',
+        ]);
+
+        $service->title = $request->title;
+        $service->description = $request->description;
+        $service->phone = $request->phone;
+        $service->labels = $request->labels ?? [];
+        $service->price = $request->price;
+
+        if ($request->hasFile('banner')) {
+            $service->banner = $request->file('banner')->store('service-banners', 'public');
+        }
+
+        $service->save();
+
+        // Clear old slots (if any)
+        $service->slots()->delete();
+
+        // Add new ones
+        foreach ($request->input('available_slots', []) as $slot) {
+            $service->slots()->create([
+                'date' => $slot['date'],
+                'time' => $slot['time'],
+                'is_available' => true,
+                'reguser_id' => null,
+            ]);
+        }
+
+        return redirect()->route('my-services')->with('success', 'Service updated.');
+    }
+
+    public function destroy($id)
+    {
+        $service = Service::findOrFail($id);
+
+        // Make sure the authenticated user owns the service
+        if ($service->provider_id !== auth()->user()->provider->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $service->slots()->delete(); // Delete associated slots first (foreign key constraint)
+        $service->delete();
+
+        return redirect()->route('my-services')->with('success', 'Service deleted.');
+    }
+
+
+}

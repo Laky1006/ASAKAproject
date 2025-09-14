@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lesson_slots', function (Blueprint $table) {
+        Schema::create('service_slots', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('lesson_id')->constrained()->onDelete('cascade');
-            $table->foreignId('student_id')->nullable()->constrained()->onDelete('set null'); // nullable until someone books it
+            $table->foreignId('service_id')->constrained()->onDelete('cascade');
+            $table->foreignId('reguser_id')->nullable()->constrained()->onDelete('set null'); // nullable until someone books it
             $table->date('date');
             $table->time('time');
             $table->boolean('is_available')->default(true);
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lesson_slots');
+        Schema::dropIfExists('service_slots');
     }
 };

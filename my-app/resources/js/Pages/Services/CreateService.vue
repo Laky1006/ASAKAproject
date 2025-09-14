@@ -3,14 +3,14 @@
     <section class="py-12">
       <div class="max-w-4xl mx-auto space-y-6 sm:px-6 lg:px-8">
 
-        <!-- Lesson Creation Card -->
+        <!-- Service Creation Card -->
         <div class="bg-white p-6 shadow sm:rounded-lg sm:p-8">
-          <h1 class="text-2xl font-bold mb-6">Create a New Lesson</h1>
+          <h1 class="text-2xl font-bold mb-6">Create a New Service</h1>
 
           <form @submit.prevent="submitForm" class="space-y-6">
             <!-- Title -->
             <div>
-              <InputLabel for="title" value="Lesson Title" />
+              <InputLabel for="title" value="Service Title" />
               <TextInput v-model="form.title" id="title" class="w-full" placeholder="e.g. Algebra Basics" />
               <p v-if="form.errors.title" class="text-red-500 text-sm mt-1">{{ form.errors.title }}</p>
             </div>
@@ -30,7 +30,7 @@
 
             <!-- Banner Image -->
             <div>
-              <InputLabel for="banner" value="Lesson Banner Image" />
+              <InputLabel for="banner" value="Service Banner Image" />
               <input type="file" @change="handleBannerChange" class="w-full mt-1" accept="image/*" />
 
               <!-- Preview -->
@@ -127,7 +127,7 @@
 
             <!-- Available Slots -->
             <div>
-              <InputLabel value="Available Lesson Dates & Times" />
+              <InputLabel value="Available Service Dates & Times" />
               <div v-for="(slot, index) in form.available_slots" :key="index" class="flex gap-4 items-center mt-2">
                 <input
                   type="date"
@@ -162,7 +162,7 @@
 
             <!-- Submit Button -->
             <div class="pt-4">
-              <PrimaryButton type="submit">Create Lesson</PrimaryButton>
+              <PrimaryButton type="submit">Create Service</PrimaryButton>
             </div>
           </form>
         </div>
@@ -233,11 +233,11 @@ export default {
       this.form.labels.splice(index, 1)
     },
     submitForm() {
-      this.form.post(route('lessons.store'), {
+      this.form.post(route('services.store'), {
         forceFormData: true,
         onSuccess: () => {
           this.form.reset()
-          this.$inertia.visit('/my-lessons')
+          this.$inertia.visit('/my-services')
         },
       })
     },

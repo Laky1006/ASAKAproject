@@ -9,10 +9,10 @@ class Notification extends Model
     protected $fillable = [
         'user_id',
         'type',
-        'lesson_id',
-        'lesson_title',
-        'student_id',
-        'student_name',
+        'service_id',
+        'service_title',
+        'reguser_id',
+        'reguser_name',
         'date',
         'time',
         'read',
@@ -22,11 +22,11 @@ class Notification extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function lesson() {
-        return $this->belongsTo(Lesson::class);
+    public function service() {
+        return $this->belongsTo(Service::class);
     }
 
-    public function student() {
-        return $this->belongsTo(Student::class);
+    public function reguser() {
+        return $this->belongsTo(Reguser::class);
     }
 }

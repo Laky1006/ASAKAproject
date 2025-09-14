@@ -40,11 +40,11 @@ const submit = () => {
                         <input
                             type="radio"
                             name="role"
-                            value="student"
+                            value="reguser"
                             v-model="form.role"
                             class="text-indigo-600 border-gray-300 focus:ring-indigo-500"
                         />
-                        <span class="ml-2 text-sm text-gray-700">Student</span>
+                        <span class="ml-2 text-sm text-gray-700">Reguser</span>
                     </label>
 
                     <!-- Skolotājs -->
@@ -52,11 +52,11 @@ const submit = () => {
                         <input
                             type="radio"
                             name="role"
-                            value="teacher"
+                            value="provider"
                             v-model="form.role"
                             class="text-indigo-600 border-gray-300 focus:ring-indigo-500"
                         />
-                        <span class="ml-2 text-sm text-gray-700">Teacher</span>
+                        <span class="ml-2 text-sm text-gray-700">Provider</span>
                     </label>
                 </div>
                     <InputError class="mt-2" :message="form.errors.role" />

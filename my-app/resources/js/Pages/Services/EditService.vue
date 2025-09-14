@@ -3,15 +3,15 @@
 <section class="py-12">
   <div class="max-w-4xl mx-auto space-y-6 sm:px-6 lg:px-8">
 
-    <!-- Edit Lesson Form Card -->
+    <!-- Edit Service Form Card -->
     <div class="bg-white p-6 shadow sm:rounded-lg sm:p-8">
-      <h1 class="text-2xl font-bold mb-6">Edit Lesson</h1>
+      <h1 class="text-2xl font-bold mb-6">Edit Service</h1>
 
       <form @submit.prevent="submitForm" class="space-y-6">
 
         <!-- Title -->
         <div>
-          <InputLabel for="title" value="Lesson Title" />
+          <InputLabel for="title" value="Service Title" />
           <TextInput v-model="form.title" id="title" class="w-full" />
           <p v-if="form.errors.title" class="text-red-500 text-sm mt-1">{{ form.errors.title }}</p>
         </div>
@@ -51,9 +51,9 @@
           <input type="file" @change="handleBannerChange" class="w-full mt-1" accept="image/*" />
           <p v-if="form.errors.banner" class="text-red-500 text-sm mt-1">{{ form.errors.banner }}</p>
 
-          <div v-if="form.banner === null && lesson.banner" class="mt-2">
+          <div v-if="form.banner === null && service.banner" class="mt-2">
             <div class="relative w-1/2 aspect-video rounded border overflow-hidden">
-              <img :src="`/storage/${lesson.banner}`" alt="Current banner" class="absolute inset-0 w-full h-full object-cover" />
+              <img :src="`/storage/${service.banner}`" alt="Current banner" class="absolute inset-0 w-full h-full object-cover" />
             </div>
           </div>
         </div>
@@ -103,7 +103,7 @@
 
         <!-- Time Slots -->
         <div>
-          <InputLabel value="Available Lesson Slots" />
+          <InputLabel value="Available Service Slots" />
           <div v-for="(slot, index) in form.available_slots" :key="index" class="flex gap-4 items-center mt-2">
             <input type="date" v-model="slot.date" class="border px-2 py-1 rounded w-1/3" />
             <input type="time" v-model="slot.time" class="border px-2 py-1 rounded w-1/3" />
@@ -122,8 +122,8 @@
     <!-- Delete Section -->
     <div class="bg-white p-6 shadow sm:rounded-lg sm:p-8">
       <h2 class="text-xl font-semibold text-red-600 mb-4">Danger Zone</h2>
-      <p class="text-sm text-gray-700 mb-4">This will permanently delete the lesson and all associated bookings.</p>
-      <button @click="deleteLesson" class="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700">Delete Lesson</button>
+      <p class="text-sm text-gray-700 mb-4">This will permanently delete the service and all associated bookings.</p>
+      <button @click="deleteService" class="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700">Delete Service</button>
     </div>
 
   </div>
@@ -143,7 +143,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue'
 export default {
   props: {
     auth: Object,
-    lesson: Object,
+    service: Object,
   },
   components: {
     MainLayout,
@@ -158,13 +158,13 @@ export default {
     ]
 
     const form = useForm({
-      title: props.lesson.title,
-      description: props.lesson.description,
-      phone: props.lesson.phone,
+      title: props.service.title,
+      description: props.service.description,
+      phone: props.service.phone,
       banner: null,
-      available_slots: [...props.lesson.slots],
-      labels: [...(props.lesson.labels || [])],
-      price: props.lesson.price || '',
+      available_slots: [...props.service.slots],
+      labels: [...(props.service.labels || [])],
+      price: props.service.price || '',
     })
 
     function handleBannerChange(event) {
@@ -175,10 +175,10 @@ export default {
       form.transform(data => ({
         ...data,
         _method: 'PUT',
-      })).post(route('lessons.update', props.lesson.id), {
+      })).post(route('services.update', props.service.id), {
         forceFormData: true,
         onSuccess: () => {
-          router.visit(route('my-lessons'))
+          router.visit(route('my-services'))
         },
       })
     }
@@ -191,10 +191,10 @@ export default {
       form.available_slots.splice(index, 1)
     }
 
-    function deleteLesson() {
-      if (confirm("Are you sure you want to delete this lesson?")) {
-        router.delete(route('lessons.destroy', props.lesson.id), {
-          onSuccess: () => router.visit(route('my-lessons')),
+    function deleteService() {
+      if (confirm("Are you sure you want to delete this service?")) {
+        router.delete(route('services.destroy', props.service.id), {
+          onSuccess: () => router.visit(route('my-services')),
         })
       }
     }
@@ -222,7 +222,7 @@ export default {
       handleBannerChange,
       addSlot,
       removeSlot,
-      deleteLesson,
+      deleteService,
       newLabel,
       labelSuggestions,
       addLabel,

@@ -1,4 +1,7 @@
 <?php
+// lesons DONE
+//providers
+// reguser
 
 namespace App\Http\Controllers;
 
@@ -54,29 +57,29 @@ class ProfileController extends Controller
 
         $user->save();
 
-        //student and teacher stuff
+        //reguser and provider stuff
 
-        if ($user->role === 'student') {
-            if ($user->student) {
-                $user->student->update([
+        if ($user->role === 'reguser') {
+            if ($user->reguser) {
+                $user->reguser->update([
                     'grade' => $request->input('grade'),
                 ]);
             } else {
-                \App\Models\Student::create([
+                \App\Models\Reguser::create([
                     'user_id' => $user->id,
                     'grade' => $request->input('grade'),
                 ]);
             }
         }
         
-        if ($user->role === 'teacher') {
-            if ($user->teacher) {
-                $user->teacher->update([
+        if ($user->role === 'provider') {
+            if ($user->provider) {
+                $user->provider->update([
                     'education' => $request->input('education'),
                     'bio' => $request->input('bio'),
                 ]);
             } else {
-                \App\Models\Teacher::create([
+                \App\Models\Provider::create([
                     'user_id' => $user->id,
                     'education' => $request->input('education'),
                     'bio' => $request->input('bio'),

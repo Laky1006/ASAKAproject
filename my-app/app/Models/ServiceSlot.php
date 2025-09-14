@@ -1,20 +1,23 @@
 <?php
+// lesons DONE
+//providers
+// reguser
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class LessonSlot extends Model
+class ServiceSlot extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'lesson_id',
+        'service_id',
         'date',
         'time',
         'is_available',
-        'student_id',
+        'reguser_id',
     ];
 
     protected $casts = [
@@ -22,13 +25,13 @@ class LessonSlot extends Model
         'date' => 'date',
     ];
 
-    public function lesson()
+    public function service()
     {
-        return $this->belongsTo(Lesson::class);
+        return $this->belongsTo(Service::class);
     }
 
-    public function student()
+    public function reguser()
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Reguser::class);
     }
 }

@@ -6,7 +6,7 @@
 
     <!-- Banner -->
     <img
-      :src="lesson.banner ? `/storage/${lesson.banner}` : '/images/default-banner.jpg'"
+      :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
       alt="Lesson Banner"
       class="w-full h-64 object-cover"
     />
@@ -14,19 +14,19 @@
     <div class="p-6 space-y-6">
     <!-- Title + Rating -->
     <div>
-      <h1 class="text-3xl font-bold">{{ lesson.title }}</h1>
+      <h1 class="text-3xl font-bold">{{ service.title }}</h1>
       <div class="flex items-center gap-2">
         <div class="flex text-2xl">
           <span
             v-for="n in 5"
             :key="n"
-            :class="lesson.rating >= n ? 'text-yellow-500' : 'text-gray-300'"
+            :class="service.rating >= n ? 'text-yellow-500' : 'text-gray-300'"
           >
             ★
           </span>
         </div>
         <span class="text-gray-600 text-lg">
-          {{ lesson.rating ? `${lesson.rating}/5` : 'Not Rated' }}
+          {{ service.rating ? `${service.rating}/5` : 'Not Rated' }}
         </span>
       </div>
     </div>
@@ -34,18 +34,18 @@
     <!-- Description -->
     <div>
       <h2 class="text-xl font-semibold mb-2">Description</h2>
-      <p class="text-gray-700">{{ lesson.description }}</p>
+      <p class="text-gray-700">{{ service.description }}</p>
     </div>
 
     <!-- Contact Info & Price (side by side) -->
     <div class="flex flex-col sm:flex-row gap-6">
       <div class="flex-1">
         <h2 class="text-xl font-semibold mb-2">&#128222; Contact Info</h2>
-        <p class="text-gray-700">{{ lesson.phone ?? 'N/A' }}</p>
+        <p class="text-gray-700">{{ service.phone ?? 'N/A' }}</p>
       </div>
       <div class="flex-1">
         <h2 class="text-xl font-semibold mb-2">&#128181; Price</h2>
-        <p class="text-gray-700">{{ lesson.price ?? 'Free' }}</p>
+        <p class="text-gray-700">{{ service.price ?? 'Free' }}</p>
       </div>
     </div>
 
@@ -70,14 +70,14 @@
         >
           <span>&#128338; {{ time }}</span>
           <button
-            v-if="auth.user && auth.user.role === 'student'"
+            v-if="auth.user && auth.user.role === 'reguser'"
             @click="submitSignup(time)"
             class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
           >
             Sign Up
           </button>
           <div v-else class="text-base text-black-700 font-bold">
-            Log in as student to apply
+            Log in as reguser to apply
           </div>
         </div>
       </div>
@@ -89,10 +89,10 @@
   <!-- Reviews -->
   <div class="bg-white mt-8 p-6 shadow sm:rounded-lg space-y-4">
     <h2 class="text-xl font-semibold mb-4">
-      Student Reviews <span class="text-gray-500">({{ reviews.length }})</span>
+      Reguser Reviews <span class="text-gray-500">({{ reviews.length }})</span>
     </h2>
 
-    <div v-if="auth.user?.role === 'student'" class="mb-6">
+    <div v-if="auth.user?.role === 'reguser'" class="mb-6">
       <div class="flex items-center gap-1 mb-2">
         <span v-for="n in 5" :key="n" class="text-2xl cursor-pointer"
           :class="n <= form.rating ? 'text-yellow-500' : 'text-gray-300'"
@@ -114,7 +114,7 @@
     </div>
 
     <div v-else class="text-gray-500 italic mb-6">
-      You must be signed in as a student to leave a review.
+      You must be signed in as a reguser to leave a review.
     </div>
 
     <div v-if="reviews.length">
@@ -125,10 +125,10 @@
       >
         <div class="flex items-center gap-3 mb-1">
           <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-sm font-bold">
-            {{ review.student.name.charAt(0) }}
+            {{ review.reguser.name.charAt(0) }}
           </div>
           <div>
-            <div class="font-medium text-l">{{ review.student.name }}</div>
+            <div class="font-medium text-l">{{ review.reguser.name }}</div>
             <div class="text-xs text-gray-500">{{ review.created_at }}</div>
           </div>
         </div>
@@ -137,7 +137,7 @@
           <span class="ml-2 text-sm text-gray-700">({{ review.rating }}/5)</span>
         </div>
         <p v-if="review.comment" class="text-gray-700 text-sm">{{ review.comment }}</p>
-        <div v-if="auth.user?.student?.id === review.student_id" class="text-right">
+        <div v-if="auth.user?.reguser?.id === review.reguser_id" class="text-right">
           <button @click="deleteReview(review.id)" class="text-sm text-red-500 hover:text-red-700">Delete</button>
         </div>
       </div>
@@ -159,7 +159,7 @@ import { router } from '@inertiajs/vue3';
 export default {
   props: {
     auth: Object,
-    lesson: Object,
+    service: Object,
     reviews: Array,
   },
   components: {
@@ -184,7 +184,7 @@ export default {
       router.post(
         route('reviews.store'),
         {
-          lesson_id: props.lesson.id,
+          service_id: props.service.id,
           rating: form.value.rating,
           comment: form.value.comment,
         },
@@ -208,7 +208,7 @@ export default {
   computed: {
     slotMap() {
       const map = {};
-      const slots = this.lesson.slots?.filter(s => s.is_available);
+      const slots = this.service.slots?.filter(s => s.is_available);
 
       if (Array.isArray(slots)) {
         slots.forEach(slot => {
@@ -241,11 +241,11 @@ export default {
     sortedReviews() {
     if (!this.reviews || !Array.isArray(this.reviews)) return [];
 
-    if (this.auth?.user?.role === 'student' && this.auth.user.student?.id) {
-      const studentId = this.auth.user.student.id;
+    if (this.auth?.user?.role === 'reguser' && this.auth.user.reguser?.id) {
+      const reguserId = this.auth.user.reguser.id;
 
-      const ownReview = this.reviews.find(r => r.student_id === studentId);
-      const others = this.reviews.filter(r => r.student_id !== studentId);
+      const ownReview = this.reviews.find(r => r.reguser_id === reguserId);
+      const others = this.reviews.filter(r => r.reguser_id !== reguserId);
 
       return ownReview ? [ownReview, ...others] : others;
     }
@@ -264,7 +264,7 @@ export default {
       if (!confirmed) return;
 
       this.$inertia.post(
-        route('lessons.book', this.lesson.id),
+        route('services.book', this.service.id),
         {
           date: dateKey,
           time: time,

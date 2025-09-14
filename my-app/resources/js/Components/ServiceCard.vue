@@ -11,7 +11,7 @@
       />
       <div class="p-4">
         <h3 class="text-xl font-semibold mb-1">{{ lesson.title }}</h3>
-        <p class="text-sm text-gray-600">Teacher: {{ teacherName }}</p>
+        <p class="text-sm text-gray-600">Provider: {{ providerName }}</p>
         <p class="text-yellow-500 text-sm">⭐ {{ lesson.rating }}/5</p>
       </div>
     </component>
@@ -33,8 +33,8 @@ export default {
     Link,
   },
   computed: {
-    teacherName() {
-      return this.lesson.teacher?.user?.name || 'Unknown';
+    providerName() {
+      return this.lesson.provider?.user?.name || 'Unknown';
     },
   },
 };

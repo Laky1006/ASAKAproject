@@ -1,35 +1,38 @@
 <?php
+// lesons DONE
+//providers
+// reguser
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Lesson extends Model
+class Service extends Model
 {
     //
     use HasFactory;
-    protected $fillable = ['title', 'description', 'rating', 'teacher_id', 'phone', 'banner'];
+    protected $fillable = ['title', 'description', 'rating', 'provider_id', 'phone', 'banner'];
 
     protected $casts = [
         'labels' => 'array',
     ];
 
-    public function teacher()
+    public function provider()
     {
-        return $this->belongsTo(\App\Models\Teacher::class);
+        return $this->belongsTo(\App\Models\Provider::class);
     }
 
-    public function students()
+    public function regusers()
     {
-        return $this->belongsToMany(Student::class, 'lesson_student')
+        return $this->belongsToMany(Reguser::class, 'service_reguser')
             ->withPivot('date', 'time')
             ->withTimestamps();
     }
 
     public function slots()
     {
-        return $this->hasMany(\App\Models\LessonSlot::class);
+        return $this->hasMany(\App\Models\ServiceSlot::class);
     }
 
     public function reviews() {

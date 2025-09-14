@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up()
 {
-    Schema::table('lessons', function (Blueprint $table) {
+    Schema::table('services', function (Blueprint $table) {
         $table->json('labels')->nullable();
     });
 }
 
 public function down()
 {
-    Schema::table('lessons', function (Blueprint $table) {
+    Schema::table('services', function (Blueprint $table) {
         $table->dropColumn('labels');
     });
 }

@@ -49,14 +49,14 @@ class User extends Authenticatable
         ];
     }
 
-    public function student()
+    public function reguser()
     {
-        return $this->hasOne(\App\Models\Student::class);
+        return $this->hasOne(\App\Models\Reguser::class);
     }
 
-    public function teacher()
+    public function provider()
     {
-        return $this->hasOne(\App\Models\Teacher::class);
+        return $this->hasOne(\App\Models\Provider::class);
     }
 
 

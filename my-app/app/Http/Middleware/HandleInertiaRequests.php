@@ -33,7 +33,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user()
-                    ? $request->user()->load('student', 'teacher')
+                    ? $request->user()->load('reguser', 'provider')
                     : null,
             ],
         ];

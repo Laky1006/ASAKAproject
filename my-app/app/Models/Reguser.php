@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Student extends Model
+class Reguser extends Model
 {
     //
     protected $fillable = ['user_id', 'grade'];
@@ -14,9 +14,9 @@ class Student extends Model
         return $this->belongsTo(\App\Models\User::class);
     }
 
-    public function lessons()
+    public function services()
     {
-        return $this->belongsToMany(Lesson::class, 'lesson_student')
+        return $this->belongsToMany(Service::class, 'service_reguser')
             ->withPivot('date', 'time')
             ->withTimestamps();
     }

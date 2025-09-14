@@ -22,9 +22,9 @@ const form = useForm({
     email: user.email,
     username: user.username,
     profile_photo: null,
-    grade: user.student?.grade || '',
-    education: user.teacher?.education || '',
-    bio: user.teacher?.bio || '',
+    grade: user.reguser?.grade || '',
+    education: user.provider?.education || '',
+    bio: user.provider?.bio || '',
 });
 
 function handlePhotoChange(event) {
@@ -144,8 +144,8 @@ function submitForm() {
                 </div>
             </div>
 
-            <!-- For students -->
-            <div v-if="user.role === 'student'">
+            <!-- For regusers -->
+            <div v-if="user.role === 'reguser'">
             <InputLabel for="grade" value="Grade" />
             <TextInput
                 id="grade"
@@ -156,8 +156,8 @@ function submitForm() {
             <InputError class="mt-2" :message="form.errors.grade" />
             </div>
 
-            <!-- For teachers -->
-            <div v-if="user.role === 'teacher'">
+            <!-- For providers -->
+            <div v-if="user.role === 'provider'">
             <InputLabel for="education" value="Education" />
             <TextInput
                 id="education"
