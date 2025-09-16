@@ -33,7 +33,7 @@
               class="absolute right-0 mt-2 w-40 bg-white text-black shadow-md rounded-lg overflow-hidden z-50"
             >
               <Link :href="route('profile.edit')" class="block px-4 py-2 hover:bg-gray-100">Profile</Link>
-              <Link :href="route('my-lessons')" class="block px-4 py-2 hover:bg-gray-100">My Lessons</Link>
+              <Link :href="route('my-services')" class="block px-4 py-2 hover:bg-gray-100">My services</Link>
               <Link :href="route('notifications.index')" class="block px-4 py-2 hover:bg-gray-100">Notifications</Link>
 
               <form @submit.prevent="logout" class="block">
