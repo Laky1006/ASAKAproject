@@ -176,9 +176,9 @@
 <script>
 import { useForm } from '@inertiajs/vue3'
 import MainLayout from '@/Layouts/MainLayout.vue'
-import InputLabel from '@/Components/InputLabel.vue'
-import TextInput from '@/Components/TextInput.vue'
-import PrimaryButton from '@/Components/PrimaryButton.vue'
+import InputLabel from '@/Components/basics/InputLabel.vue'
+import TextInput from '@/Components/basics/TextInput.vue'
+import PrimaryButton from '@/Components/basics/PrimaryButton.vue'
 
 export default {
   props: {
