@@ -49,6 +49,7 @@ Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])
     ->middleware(['auth'])
     ->name('reviews.destroy');
 
+
 Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index')->middleware('auth');
 
 
@@ -123,6 +124,10 @@ Route::post('/services/cancel', [ServiceController::class, 'cancel'])->middlewar
 
 Route::get('/services/{id}/edit', [ServiceController::class, 'edit'])->middleware(['auth'])->name('services.edit');
 
+// --- Admin landing page (admins only) ---
+Route::middleware(['auth','admin'])->group(function () {
+    Route::get('/admin', fn () => Inertia::render('Admin'))->name('admin.dashboard');
+});
 
 
 require __DIR__.'/auth.php';

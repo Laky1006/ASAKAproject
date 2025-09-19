@@ -1,6 +1,6 @@
 <?php
-// lesons DONE
-//providers
+// lessons DONE
+// providers
 // reguser
 
 namespace App\Http\Controllers;
@@ -9,71 +9,81 @@ use Illuminate\Http\Request;
 use App\Models\Service;
 use App\Models\Review;
 use App\Models\Notification;
+use App\Models\Reguser;
 
 class ReviewController extends Controller
 {
     public function store(Request $request)
-{
-    $request->validate([
-        'service_id' => 'required|exists:services,id',
-        'rating' => 'required|integer|min:1|max:5',
-        'comment' => 'nullable|string|max:1000',
-    ]);
+    {
+        $request->validate([
+            'service_id' => 'required|exists:services,id',
+            'rating'     => 'required|integer|min:1|max:5',
+            'comment'    => 'nullable|string|max:1000',
+        ]);
 
-    $reguserId = auth()->user()->reguser->id ?? null;
+        $user = $request->user();
 
-    if (!$reguserId) {
-        return back()->withErrors(['Only regusers can leave reviews.']);
+        // Allow only reguser or admin to post reviews
+        if (! in_array($user->role, ['reguser', 'admin'])) {
+            return back()->withErrors(['Only regusers or admin can leave reviews.']);
+        }
+
+        // Ensure there is a Reguser profile (admin should have one from seeder; still safe)
+        $reguser = $user->reguser ?: Reguser::firstOrCreate(['user_id' => $user->id]);
+        $reguserId = $reguser->id;
+
+        $serviceId = $request->service_id;
+
+        // Prevent duplicate reviews from the same reguser for the same service
+        $existing = Review::where('service_id', $serviceId)
+            ->where('reguser_id', $reguserId)
+            ->first();
+
+        if ($existing) {
+            return back()->withErrors(['You have already reviewed this service.']);
+        }
+
+        $review = Review::create([
+            'service_id' => $serviceId,
+            'reguser_id' => $reguserId,
+            'rating'     => $request->rating,
+            'comment'    => $request->comment,
+        ]);
+
+        // Update service rating and notify provider
+        $service = Service::find($review->service_id);
+        if ($service) {
+            $service->updateAverageRating();
+
+            Notification::create([
+                'user_id'       => $service->provider->user->id,
+                'type'          => 'review_left',
+                'service_id'    => $service->id,
+                'service_title' => $service->title,
+                'reguser_id'    => $reguserId,
+                'reguser_name'  => $user->name,
+            ]);
+        }
+
+        return back()->with('success', 'Review posted successfully.');
     }
 
-    $serviceId = $request->service_id;
+    public function destroy($id)
+    {
+        // Extra safety: only admin should reach here (route also has 'admin' middleware)
+        if (auth()->user()?->role !== 'admin') {
+            abort(403, 'Unauthorized');
+        }
 
-    // Prevent duplicate reviews
-    $existing = Review::where('service_id', $serviceId)
-        ->where('reguser_id', $reguserId)
-        ->first();
+        $review  = Review::findOrFail($id);
+        $service = $review->service;
 
-    if ($existing) {
-        return back()->withErrors(['You have already reviewed this service.']);
+        $review->delete();
+
+        if ($service) {
+            $service->updateAverageRating();
+        }
+
+        return back()->with('success', 'Review deleted.');
     }
-
-    $review = Review::create([
-        'service_id' => $serviceId,
-        'reguser_id' => $reguserId,
-        'rating' => $request->rating,
-        'comment' => $request->comment,
-    ]);
-
-    $service = Service::find($review->service_id);
-    $service->updateAverageRating();
-
-    Notification::create([
-    'user_id' => $service->provider->user->id,
-    'type' => 'review_left',
-    'service_id' => $service->id,
-    'service_title' => $service->title,
-    'reguser_id' => auth()->user()->reguser->id ?? null,
-    'reguser_name' => auth()->user()->name,
-]);
-
-    return back()->with('success', 'Review posted successfully.');
-}
-
-public function destroy($id)
-{
-    $review = Review::findOrFail($id);
-
-    // Ensure the logged-in user is the one who posted it
-    if ($review->reguser_id !== auth()->user()->reguser->id) {
-        abort(403, 'Unauthorized to delete this review.');
-    }
-
-    $service = $review->service; 
-    $review->delete();
-    $service->updateAverageRating();
-
-    return back()->with('success', 'Review deleted.');
-}
-
-
 }

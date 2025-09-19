@@ -5,14 +5,24 @@
       <header class="text-white px-9 py-11 flex justify-between items-center shadow-[0_6px_8px_rgba(0,0,0,0.45)]"
         style="background-image: url('/images/nav-bg1.png'); background-size: cover; background-position: center;">
         <h1 class="font-righteous text-5xl ">Learnora</h1>
-  
+  <!-----ADMIN POGA------->
         <nav class="flex items-center gap-10 text-lg">
+          <button
+              v-if="user?.role === 'admin'"
+              @click="goAdmin"
+              class="text-white text-lg hover:underline bg-transparent px-0 py-0"
+            >
+              Admin
+            </button>
           <a href="/" class="hover:underline">Home</a>
           <a :href="route('about')" class="hover:underline">About</a>
   
           <!-- YES loggedin -->
           <div v-if="user" class="relative" ref="dropdown">
-            <button @click="toggleMenu" class="flex items-center gap-2 focus:outline-none hover:underline">
+
+            <!-- Admin Panel button (only for admins) -->
+            
+          <button @click="toggleMenu" class="flex items-center gap-2 focus:outline-none hover:underline">
               <span>{{ user.username }}</span>
               <img
                 v-if="user.profile_photo"
@@ -27,6 +37,7 @@
                 class="w-11 h-11 rounded-full object-cover"
               />
             </button>
+            
 
             <div
               v-if="showMenu"
@@ -65,46 +76,40 @@
 </template>
   
 <script>
-  import { Link, router } from '@inertiajs/vue3'
-  
-  export default {
-    props: {
-      user: Object,
-    },
+import { Link, router } from '@inertiajs/vue3'
 
-    components: {
-        Link,
+export default {
+  props: { user: Object },
+  components: { Link },
+  data() {
+    return { showMenu: false }
+  },
+  methods: {
+    toggleMenu() {
+      this.showMenu = !this.showMenu
     },
-
-    data() {
-      return {
-        showMenu: false,
+    logout() {
+      router.post('/logout')
+    },
+    handleClickOutside(event) {
+      if (this.showMenu && this.$refs.dropdown && !this.$refs.dropdown.contains(event.target)) {
+        this.showMenu = false
       }
     },
-
-    methods: {
-      toggleMenu() {
-        this.showMenu = !this.showMenu
-      },
-      logout() {
-        router.post('/logout')
-      },
-      handleClickOutside(event) {
-        if (this.showMenu && this.$refs.dropdown && !this.$refs.dropdown.contains(event.target)) {
-          this.showMenu = false
-        }
-      },
+    // navigate to the admin page
+    goAdmin() {
+      router.get('/admin')
     },
-
-    mounted() {
-      document.addEventListener('click', this.handleClickOutside)
-    },
-
-    beforeUnmount() {
-      document.removeEventListener('click', this.handleClickOutside)
-    },
-  }
+  },
+  mounted() {
+    document.addEventListener('click', this.handleClickOutside)
+  },
+  beforeUnmount() {
+    document.removeEventListener('click', this.handleClickOutside)
+  },
+}
 </script>
+
   
 <style scoped>
 /* keeps footer down */
