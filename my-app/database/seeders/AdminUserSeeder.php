@@ -17,7 +17,7 @@ class AdminUserSeeder extends Seeder
             [
                 'name' => 'Site Admin',
                 'username' => 'admin',          // must be unique in your DB
-                'password' => Hash::make('ChangeThis!123'),
+                'password' => Hash::make('Admin!123'),
                 'role' => 'admin',
             ]
         );
