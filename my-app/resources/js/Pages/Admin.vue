@@ -57,6 +57,20 @@ const roleBadge = (r) => ({
   provider: 'bg-amber-100 text-amber-800',
   reguser: 'bg-blue-100 text-blue-800',
 }[r] || 'bg-gray-100 text-gray-700')
+
+const deletingId = ref(null)
+
+const confirmDelete = (u) => {
+  if (u.id === (props.auth?.user?.id || 0)) return
+  if (!window.confirm(`Delete user "${u.name}" (ID: ${u.id})? This cannot be undone.`)) return
+
+  deletingId.value = u.id
+  router.delete(route('admin.users.destroy', u.id), {
+    preserveScroll: true,
+    onFinish: () => (deletingId.value = null),
+  })
+}
+
 </script>
 
 <template>
@@ -89,25 +103,42 @@ const roleBadge = (r) => ({
               <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Email</th>
               <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Role</th>
               <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Created</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Actions</th>
+
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
-            <tr v-for="u in users?.data || []" :key="u.id" class="hover:bg-gray-50">
-              <td class="px-6 py-3 text-sm text-gray-700">{{ u.id }}</td>
-              <td class="px-6 py-3 text-sm font-medium text-gray-900">{{ u.name }}</td>
-              <td class="px-6 py-3 text-sm text-gray-700">{{ u.email }}</td>
-              <td class="px-6 py-3">
-                <span v-if="u.role" class="px-2 py-1 rounded-full text-xs font-semibold" :class="roleBadge(u.role)">
-                  {{ u.role }}
-                </span>
-                <span v-else class="text-gray-400 text-sm">—</span>
-              </td>
-              <td class="px-6 py-3 text-sm text-gray-700">{{ new Date(u.created_at).toLocaleString() }}</td>
-            </tr>
-            <tr v-if="!users || !users.data || !users.data.length">
-              <td colspan="5" class="px-6 py-8 text-center text-gray-500">No users found.</td>
-            </tr>
-          </tbody>
+  <tr v-for="u in users?.data || []" :key="u.id" class="hover:bg-gray-50">
+    <td class="px-6 py-3 text-sm text-gray-700">{{ u.id }}</td>
+    <td class="px-6 py-3 text-sm font-medium text-gray-900">{{ u.name }}</td>
+    <td class="px-6 py-3 text-sm text-gray-700">{{ u.email }}</td>
+    <td class="px-6 py-3">
+      <span v-if="u.role" class="px-2 py-1 rounded-full text-xs font-semibold" :class="roleBadge(u.role)">
+        {{ u.role }}
+      </span>
+      <span v-else class="text-gray-400 text-sm">—</span>
+    </td>
+    <td class="px-6 py-3 text-sm text-gray-700">
+      {{ new Date(u.created_at).toLocaleString() }}
+    </td>
+    <!-- ✅ new Actions column -->
+    <td class="px-6 py-3">
+      <button
+        @click="confirmDelete(u)"
+        class="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+        :disabled="deletingId === u.id || u.id === auth?.user?.id"
+        :title="u.id === auth?.user?.id ? 'You cannot delete yourself' : 'Delete user'"
+      >
+        Delete
+      </button>
+    </td>
+  </tr>
+
+  <tr v-if="!users || !users.data || !users.data.length">
+    <td colspan="6" class="px-6 py-8 text-center text-gray-500">No users found.</td>
+  </tr>
+</tbody>
+
         </table>
 
         <div class="p-4 flex flex-wrap gap-2" v-if="users?.links">

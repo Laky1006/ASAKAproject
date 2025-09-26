@@ -76,4 +76,16 @@ class UserController extends Controller
             ],
         ]);
     }
+
+    public function destroy(Request $request, User $user)
+    {
+        if ($request->user()->id === $user->id) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'User deleted.');
+    }
+
 }
