@@ -3,24 +3,54 @@ import { Link, router } from '@inertiajs/vue3'
 import { ref, watch } from 'vue'
 import MainLayout from '@/Layouts/MainLayout.vue'
 
+// imported component
+import SearchFindSort from '@/Components/SearchSortFilter.vue'
+
 const props = defineProps({
   auth: Object,
-  users: Object,     // paginator
-  filters: Object,   // { search }
+  users: Object,          // paginator
+  filters: Object,        // { search?: string, sort?: string, roles?: string[] }
 })
 
+// local state synced with query
 const search = ref(props.filters?.search || '')
+const sort = ref(props.filters?.sort || 'name_asc')
+const selectedFilters = ref(Array.isArray(props.filters?.roles) ? props.filters.roles : [])
+
+// options for the component
+const sortOptions = {
+  name_asc: 'Name A–Z',
+  name_desc: 'Name Z–A',
+  id_asc: 'ID ↑ (lowest first)',
+  id_desc: 'ID ↓ (highest first)',
+}
+const roleFilters = ['admin', 'reguser', 'provider']
+
+// single debouncer for any change
 let t
-watch(search, () => {
+const pushQuery = () => {
   clearTimeout(t)
   t = setTimeout(() => {
-    // avoid Ziggy until it's set up; use plain path
-    router.get('/admin', { search: search.value || undefined }, {
+    const params = {
+      search: search.value || undefined,
+      sort: sort.value || undefined,
+    }
+    // only send roles[] if at least one is selected
+    if (selectedFilters.value.length) {
+      // Inertia will serialize arrays like roles[]=admin&roles[]=provider
+      params.roles = selectedFilters.value
+    }
+    router.get('/admin', params, {
       preserveState: true,
       replace: true,
     })
   }, 300)
-})
+}
+
+// watch all 3 inputs
+watch(search, pushQuery)
+watch(sort, pushQuery)
+watch(selectedFilters, pushQuery, { deep: true })
 
 const roleBadge = (r) => ({
   admin: 'bg-purple-100 text-purple-800',
@@ -32,15 +62,21 @@ const roleBadge = (r) => ({
 <template>
   <MainLayout :user="auth?.user">
     <div class="max-w-7xl mx-auto p-6 space-y-6">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div class="flex flex-col gap-3">
         <div>
           <h1 class="text-3xl font-bold">Admin — All Users</h1>
           <p class="text-gray-600">Browse every registered user on the site.</p>
         </div>
-        <input
-          v-model="search"
-          placeholder="Search name or email…"
-          class="rounded-lg border px-3 py-2 w-full md:w-80"
+
+        <!-- ⬇️ Drop in your Search/Sort/Filter component -->
+        <SearchFindSort
+          v-model:search="search"
+          v-model:sort="sort"
+          v-model:selectedFilters="selectedFilters"
+          :sortOptions="sortOptions"
+          :filters="roleFilters"
+          searchPlaceholder="Search name or email…"
+          :showSelectedChips="true"
         />
       </div>
 
