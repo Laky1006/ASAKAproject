@@ -22,6 +22,7 @@
       <span class="ml-2 text-sm text-gray-700">({{ review.rating || 0 }}/5)</span>
     </div>
 
+    <ReportButton :review-id="review.id" />
     <!-- Comment -->
     <p v-if="review.comment" class="text-gray-700 text-sm whitespace-pre-line">
       {{ review.comment }}
@@ -42,6 +43,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import ReportButton from '@/Components/ReportButton.vue'
 
 const props = defineProps({
   review: { type: Object, required: true },
