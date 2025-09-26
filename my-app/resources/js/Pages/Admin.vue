@@ -121,7 +121,7 @@ const confirmDelete = (u) => {
     <td class="px-6 py-3 text-sm text-gray-700">
       {{ new Date(u.created_at).toLocaleString() }}
     </td>
-    <!-- ✅ new Actions column -->
+    <!-- new Actions column -->
     <td class="px-6 py-3">
       <button
         @click="confirmDelete(u)"
