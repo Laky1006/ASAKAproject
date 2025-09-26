@@ -47,10 +47,10 @@ class NewPasswordController extends Controller
             ],
         ], 
     [
-    'password.min' => 'Password must be at least 8 characters.',
-    'password.mixed' => 'Password must include both uppercase and lowercase letters.',
-    'password.numbers' => 'Password must include at least one number.',
-    'password.symbols' => 'Password must include at least one special character.',
+    'password.min' => 'Password must be at least 8 characters, include uppercase, lowercase letters, one number and one special character.',
+    'password.mixed' => 'Password must be at least 8 characters, include uppercase, lowercase letters, one number and one special character.',
+    'password.numbers' => 'Password must be at least 8 characters, include uppercase, lowercase letters, one number and one special character.',
+    'password.symbols' => 'Password must be at least 8 characters, include uppercase, lowercase letters, one number and one special character.',
 ]);
 
         // Here we will attempt to reset the user's password. If it is successful we

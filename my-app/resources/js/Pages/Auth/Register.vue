@@ -5,6 +5,7 @@ import InputLabel from '@/Components/basics/InputLabel.vue';
 import PrimaryButton from '@/Components/basics/PrimaryButton.vue';
 import TextInput from '@/Components/basics/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const form = useForm({
     name: '',
@@ -14,6 +15,12 @@ const form = useForm({
     password_confirmation: '',
     role: '',
 });
+
+const showPassword = ref(false);
+
+const togglePassword = () => {
+  showPassword.value = !showPassword.value;
+};
 
 const submit = () => {
     form.post(route('register'), {
@@ -112,21 +119,39 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
+            <!-- Password -->
             <div class="mt-4">
                 <InputLabel for="password" value="Password" />
 
-                <TextInput
-                    id="password"
-                    type="password"
-                    class="mt-1 block w-full"
-                    v-model="form.password"
-                    required
-                    autocomplete="new-password"
-                />
+                <div class="relative">
+                    <TextInput
+                            id="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            class="mt-1 block w-full"
+                            v-model="form.password"
+                            required
+                            autocomplete="new-password"
+                        />
+
+                    <!-- Eye toggle button -->
+                    <button
+                        type="button"
+                        @click="togglePassword"
+                        class="absolute inset-y-0 right-0 px-3 flex items-center focus:outline-none"
+                        >
+                        <span
+                            class="material-symbols-outlined transition-colors duration-200"
+                            :class="showPassword ? 'text-gray-300' : 'text-gray-600'"
+                        >
+                            visibility
+                        </span>
+                    </button>
+                </div>
 
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
+            <!-- Password Confirm-->
             <div class="mt-4">
                 <InputLabel
                     for="password_confirmation"

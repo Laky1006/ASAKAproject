@@ -94,4 +94,12 @@ Route::middleware(['auth','admin'])->group(function () {
 
 });
 
+// TOP SECRET PAGE
+
+// simple example
+Route::get('/secret', function () {
+    return Inertia::render('Secret');
+})->middleware(['auth', 'admin']); 
+
+
 require __DIR__ . '/auth.php';
