@@ -1,57 +1,20 @@
 <?php
 
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceController;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\ReviewController;
-use App\Http\Controllers\NotificationController;
-
-
-// Route::get('/', function () {
-//     // return Inertia::render('Welcome', [
-//     //     'canLogin' => Route::has('login'),
-//     //     'canRegister' => Route::has('register'),
-//     //     'laravelVersion' => Application::VERSION,
-//     //     'phpVersion' => PHP_VERSION,
-//     // ]);
-
-
-//     // npm run dev
-//     // php artisan serve
-
-//  // MAKE IMG FOR LESOSN, SHORT DECS, LONG DESC
-
-//     return Inertia::render('Home');
-// });
-
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', [ServiceController::class, 'index']);
 
-Route::middleware(['auth'])->group(function () {
-    Route::post('/reviews', [ReviewController::class, 'store'])->middleware(['auth'])->name('reviews.store');
-
-});
-
-Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])
-    ->middleware(['auth'])
-    ->name('reviews.destroy');
-
-
-Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index')->middleware('auth');
-
+Route::get('/dashboard', fn () => Inertia::render('Dashboard'))
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::get('/about', function () {
     return Inertia::render('About', [
@@ -59,75 +22,68 @@ Route::get('/about', function () {
     ]);
 })->name('about');
 
-// Route::get('/my-services', function () {
-//     $user = auth()->user();
+/**
+ * Authenticated routes
+ */
+Route::middleware('auth')->group(function () {
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-//     if ($user->role === 'provider') {
-//         return Inertia::render('Services/ProviderServices');
-//     }
+    // Reviews
+    Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+    Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
-//     if ($user->role === 'reguser') {
-//         return Inertia::render('Services/ReguserServices');
-//     }
+    // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
-//     abort(403);
-// })->middleware(['auth'])->name('my-services');
+    // My services (provider/reguser split)
+    Route::get('/my-services', function () {
+        $user = Auth::user();
 
-Route::get('/my-services', function () {
-    $user = Auth::user();
+        if ($user->role === 'provider') {
+            $providerId = $user->provider->id ?? null;
+            if (!$providerId) {
+                abort(403, 'Provider record not found.');
+            }
 
-    if ($user->role === 'provider') {
-        $providerId = $user->provider->id ?? null;
+            $services = Service::where('provider_id', $providerId)->get();
 
-        if (!$providerId) {
-            abort(403, 'Provider record not found.');
+            return Inertia::render('Services/ProviderServices', [
+                'services' => $services,
+                'auth' => ['user' => $user],
+            ]);
         }
 
-        $services = Service::where('provider_id', $providerId)->get();
+        if ($user->role === 'reguser') {
+            return app(ServiceController::class)->reguserServices();
+        }
 
-        return Inertia::render('Services/ProviderServices', [
-            'services' => $services,
-            'auth' => ['user' => $user],
-        ]);
-    }
+        abort(403);
+    })->name('my-services');
 
-   if ($user->role === 'reguser') {
-        return app(ServiceController::class)->reguserServices();
-    }
-
-    abort(403);
-})->middleware(['auth'])->name('my-services');
-
-//Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
-
-    // Route::get('/services/create', [ServiceController::class, 'create'])->name('services.create');
-
-    Route::middleware('auth')->group(function () {
-        Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
-    });
-
-
-Route::get('/services-create', function () {
-    return Inertia::render('Services/CreateService');
-})->name('services.create');
-Route::get('/services/{id}', [ServiceController::class, 'show'])->name('services.show');
-
-Route::delete('/services/{id}', [ServiceController::class, 'destroy'])->middleware(['auth'])->name('services.destroy');
-
-
-
-Route::put('/services/{id}', [ServiceController::class, 'update'])->middleware(['auth'])->name('services.update');
-
-Route::post('/services/{id}/book', [ServiceController::class, 'book'])->middleware(['auth'])->name('services.book');
-
-Route::post('/services/cancel', [ServiceController::class, 'cancel'])->middleware(['auth'])->name('services.cancel');
-
-Route::get('/services/{id}/edit', [ServiceController::class, 'edit'])->middleware(['auth'])->name('services.edit');
-
-// --- Admin landing page (admins only) ---
-Route::middleware(['auth','admin'])->group(function () {
-    Route::get('/admin', fn () => Inertia::render('Admin'))->name('admin.dashboard');
+    // Services (auth-required actions)
+    Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
+    Route::delete('/services/{id}', [ServiceController::class, 'destroy'])->name('services.destroy');
+    Route::put('/services/{id}', [ServiceController::class, 'update'])->name('services.update');
+    Route::post('/services/{id}/book', [ServiceController::class, 'book'])->name('services.book');
+    Route::post('/services/cancel', [ServiceController::class, 'cancel'])->name('services.cancel');
+    Route::get('/services/{id}/edit', [ServiceController::class, 'edit'])->name('services.edit');
 });
 
+// Services (public)
+Route::get('/services-create', fn () => Inertia::render('Services/CreateService'))->name('services.create');
+Route::get('/services/{id}', [ServiceController::class, 'show'])->name('services.show');
 
-require __DIR__.'/auth.php';
+// Admin-only
+Route::middleware(['auth','admin'])->group(function () {
+    // Admin dashboard (only users with role = admin)
+    Route::get('/admin', [UserController::class, 'index'])->name('admin.dashboard');
+
+    // In future: add more admin routes here (e.g. /admin/users, /admin/services)
+    // Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
+
+});
+
+require __DIR__ . '/auth.php';
