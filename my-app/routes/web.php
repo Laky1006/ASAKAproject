@@ -83,7 +83,17 @@ Route::middleware(['auth','admin'])->group(function () {
 
     // In future: add more admin routes here (e.g. /admin/users, /admin/services)
     // Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
+    // delete route
+    Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
 });
+
+// TOP SECRET PAGE
+
+// simple example
+Route::get('/secret', function () {
+    return Inertia::render('Secret');
+})->middleware(['auth', 'admin']); 
+
 
 require __DIR__ . '/auth.php';
