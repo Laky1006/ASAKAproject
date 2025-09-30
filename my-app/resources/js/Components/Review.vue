@@ -1,5 +1,8 @@
 <template>
-  <div class="border rounded p-4 bg-white shadow-sm">
+  <div class="relative border rounded p-4 bg-white shadow-sm">
+    <!-- Report icon in top right -->
+    <ReportButton v-if="auth?.user" :review-id="review.id" />
+
     <!-- Header: avatar + name + date -->
     <div class="flex items-center gap-3 mb-1">
       <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-sm font-bold">
@@ -22,7 +25,6 @@
       <span class="ml-2 text-sm text-gray-700">({{ review.rating || 0 }}/5)</span>
     </div>
 
-    <ReportButton :review-id="review.id" />
     <!-- Comment -->
     <p v-if="review.comment" class="text-gray-700 text-sm whitespace-pre-line">
       {{ review.comment }}
@@ -40,6 +42,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { computed } from 'vue'
