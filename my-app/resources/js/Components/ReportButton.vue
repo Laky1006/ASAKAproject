@@ -39,7 +39,6 @@ function submitReport() {
     reason.value = ''
     open.value = false
 
-    // auto-clear toast after 3s
     setTimeout(() => {
       successMessage.value = ''
     }, 3000)
@@ -66,7 +65,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
 </script>
 
 <template>
-  <div class="report-button absolute top-2 right-2">
+  <div class="report-button inline-block relative">
     <!-- Icon -->
     <button
       @click.stop="open = !open"
@@ -75,7 +74,7 @@ onBeforeUnmount(() => document.removeEventListener('click', handleClickOutside))
       <span class="material-symbols-outlined">exclamation</span>
     </button>
 
-    <!-- Dropdown -->
+    <!-- Dropdown (absolute relative to button) -->
     <div
       v-if="open"
       class="absolute right-0 mt-2 w-56 bg-white border rounded shadow-lg z-50 p-2"

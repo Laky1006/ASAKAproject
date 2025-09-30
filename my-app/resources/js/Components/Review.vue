@@ -1,7 +1,9 @@
 <template>
   <div class="relative border rounded p-4 bg-white shadow-sm">
     <!-- Report icon in top right -->
-    <ReportButton v-if="auth?.user" :review-id="review.id" />
+    <div class="absolute top-2 right-2 z-10">
+      <ReportButton v-if="auth?.user" :review-id="review.id" />
+    </div>
 
     <!-- Header: avatar + name + date -->
     <div class="flex items-center gap-3 mb-1">
@@ -42,6 +44,7 @@
     </div>
   </div>
 </template>
+
 
 
 <script setup>
