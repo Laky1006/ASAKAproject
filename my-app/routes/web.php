@@ -4,11 +4,13 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ReportController;
 use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Admin\UserController;
+
 
 Route::get('/', [ServiceController::class, 'index']);
 
@@ -70,6 +72,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/services/{id}/book', [ServiceController::class, 'book'])->name('services.book');
     Route::post('/services/cancel', [ServiceController::class, 'cancel'])->name('services.cancel');
     Route::get('/services/{id}/edit', [ServiceController::class, 'edit'])->name('services.edit');
+
+
+    Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+
 });
 
 // Services (public)
@@ -87,5 +93,13 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
 });
+
+// TOP SECRET PAGE
+
+// simple example
+Route::get('/secret', function () {
+    return Inertia::render('Secret');
+})->middleware(['auth', 'admin']); 
+
 
 require __DIR__ . '/auth.php';

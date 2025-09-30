@@ -14,6 +14,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\Reguser;
 use App\Models\Provider;
+use App\Http\Requests\Auth\RegisterRequest;
 
 class RegisteredUserController extends Controller
 {
@@ -29,45 +30,28 @@ class RegisteredUserController extends Controller
      * Handle an incoming registration request.
      *
      * @throws \Illuminate\Validation\ValidationException
-     */
-    public function store(Request $request): RedirectResponse
+     */public function store(RegisterRequest $request): \Illuminate\Http\RedirectResponse
     {
+        $data = $request->validated();
 
-        //dd($request->all());
-        $request->validate([
-            'name' => ['required', 'string', 'max:255', 'regex:/^[A-Za-zĀ-žā-ž\s]+$/u'],
-            'username' => ['required', 'string', 'min:3', 'max:20', 'regex:/^[A-Za-z0-9_.]+$/', 'unique:users,username'],
-            'email' => ['required', 'string', 'max:255', 'unique:users,email'],
-            'password' => [
-                'required',
-                'confirmed',
-                Password::min(8)
-                    ->mixedCase()  // at least one uppercase and one lowercase letter
-                    ->numbers()    // at least one number
-                    ->symbols(),   // at least one special character
-            ],
-            'role' => ['required', 'in:reguser,provider'],
+        $user = \App\Models\User::create([
+            'name' => $data['name'],
+            'username' => $data['username'],
+            'email' => $data['email'],
+            'password' => \Illuminate\Support\Facades\Hash::make($data['password']),
+            'role' => $data['role'],
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'username' => $request->username,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-        ]);
+        event(new \Illuminate\Auth\Events\Registered($user));
 
-        event(new Registered($user));
-
-        if ($request->role === 'reguser') {
-            Reguser::create(['user_id' => $user->id]);
-        } elseif ($request->role === 'provider') {
-            Provider::create(['user_id' => $user->id]);
+        if ($data['role'] === 'reguser') {
+            \App\Models\Reguser::create(['user_id' => $user->id]);
+        } elseif ($data['role'] === 'provider') {
+            \App\Models\Provider::create(['user_id' => $user->id]);
         }
 
-        Auth::login($user);
+        \Illuminate\Support\Facades\Auth::login($user);
 
-        // return redirect(route('dashboard', absolute: false));
         return redirect('/profile');
     }
 }

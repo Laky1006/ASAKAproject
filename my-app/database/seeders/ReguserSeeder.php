@@ -12,6 +12,14 @@ class ReguserSeeder extends Seeder
     public function run(): void
     {
         $regusers = [
+            //TEST user
+            [
+                'name' => 'Test user',
+                'username' => 'test',
+                'email' => 'test@example.com',
+                'password' => 'password',
+                'role' => 'reguser',
+            ],
             [
                 'name' => 'Alise Trololo',
                 'username' => 'alice_reguser',
