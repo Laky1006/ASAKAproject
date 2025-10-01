@@ -84,15 +84,15 @@ Route::get('/services/{id}', [ServiceController::class, 'show'])->name('services
 
 // Admin-only
 Route::middleware(['auth','admin'])->group(function () {
-    // Admin dashboard (only users with role = admin)
-    Route::get('/admin', [UserController::class, 'index'])->name('admin.dashboard');
+    // Users list
+    Route::get('/admin-panel', [UserController::class, 'index'])->name('admin-panel.dashboard');
+    Route::delete('/admin-panel/users/{user}', [UserController::class, 'destroy'])->name('admin-panel.users.destroy');
 
-    // In future: add more admin routes here (e.g. /admin/users, /admin/services)
-    // Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
-    // delete route
-    Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
-
+    // Reports list
+    Route::get('/admin-panel/reports', [ReportController::class, 'index'])->name('admin-panel.reports.index');
+    Route::delete('/admin-panel/reports/{report}', [ReportController::class, 'destroy'])->name('admin-panel.reports.destroy');
 });
+
 
 // TOP SECRET PAGE
 

@@ -64,9 +64,9 @@
             class="block py-3 px-4 hover:text-[#e4299c] hover:bg-[#FFF8F0] rounded-lg">
             My Services
           </Link>
-          <Link v-if="user.role === 'admin'" :href="route('admin.dashboard')" @click="showMobileMenu = false"
+          <Link v-if="user.role === 'admin'" :href="route('admin-panel.dashboard')" @click="showMobileMenu = false"
             class="block py-3 px-4 hover:text-[#e4299c] hover:bg-[#FFF8F0] rounded-lg">
-            Admin
+            Admin Panel
           </Link>
           <Link :href="route('notifications.index')" @click="showMobileMenu = false"
             class="block py-3 px-4 hover:text-[#e4299c] hover:bg-[#FFF8F0] rounded-lg">
@@ -112,7 +112,6 @@
         <Link href="/" class="hover:text-[#e4299c] hover:underline">Home</Link>
         <Link :href="route('about')" class="hover:text-[#e4299c] hover:underline">About</Link>
 
-        <!-- Desktop User Menu -->
         <div v-if="user" class="relative" ref="dropdown">
           <button @click="toggleMenu"
             class="flex items-center gap-2 hover:text-[#e4299c] transition-colors">
@@ -127,7 +126,7 @@
             class="absolute right-0 mt-2 w-44 bg-white shadow-xl rounded-lg overflow-hidden z-50 border border-[#febd59]">
             <Link :href="route('profile.edit')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c]">Profile</Link>
             <Link v-if="user.role !== 'admin'" :href="route('my-services')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c]">My Services</Link>
-            <Link v-if="user.role === 'admin'" :href="route('admin.dashboard')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c]">Admin Panel</Link>
+            <Link v-if="user.role === 'admin'" :href="route('admin-panel.dashboard')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c]">Admin Panel</Link>
             <Link :href="route('notifications.index')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c]">Notifications</Link>
 
             <form @submit.prevent="logout" class="border-t border-[#febd59]">
