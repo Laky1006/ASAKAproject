@@ -48,7 +48,7 @@ class ProfileController extends Controller
             $data['profile_photo'] = $path;
         }
 
-        //email
+        //email 
         $user->fill($data);
 
         if ($user->isDirty('email')) {

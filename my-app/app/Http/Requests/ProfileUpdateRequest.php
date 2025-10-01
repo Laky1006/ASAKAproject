@@ -21,8 +21,8 @@ class ProfileUpdateRequest extends FormRequest
                 'required',
                 'string',
                 'lowercase',
-                'email:rfc,dns',
-                'email',
+                'email:rfc', //email:rfc,dns <- šo izmanto, ja email ir reals, bet taka mums viņi ir fake, tad pagaidam so izmantosim
+                //'email',
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
