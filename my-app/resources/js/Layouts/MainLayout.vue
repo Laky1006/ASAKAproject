@@ -34,13 +34,6 @@
       </div>
 
       <div class="px-6 py-4 space-y-2">
-        <button
-          v-if="user?.role === 'admin'"
-          @click="goAdmin"
-          class="block w-full text-left py-3 px-4 text-[#2D1810] hover:text-[#e4299c] hover:bg-[#FFF8F0] transition-colors rounded-lg"
-        >
-          Admin
-        </button>
         <a 
           href="/" 
           @click="showMobileMenu = false"
@@ -81,10 +74,19 @@
           </Link>
           <Link 
             :href="route('my-services')" 
+            v-if="!user?.role === 'admin'"
             @click="showMobileMenu = false"
             class="block py-3 px-4 text-[#2D1810] hover:text-[#e4299c] hover:bg-[#FFF8F0] transition-colors rounded-lg"
           >
             My services
+          </Link>
+          <Link 
+            :href="route('admin')" 
+            v-if="user?.role === 'admin'"
+            @click="showMobileMenu = false"
+            class="block py-3 px-4 text-[#2D1810] hover:text-[#e4299c] hover:bg-[#FFF8F0] transition-colors rounded-lg"
+          >
+            Admin
           </Link>
           <Link 
             :href="route('notifications.index')" 
@@ -141,13 +143,6 @@
 
       <!-----DESKTOP NAVIGATION----->
       <nav class="hidden sm:flex items-center gap-6 lg:gap-8 text-base lg:text-lg text-[#2D1810] font-medium">
-        <button
-          v-if="user?.role === 'admin'"
-          @click="goAdmin"
-          class="text-[#2D1810] hover:text-[#e4299c] hover:underline bg-transparent px-0 py-0 transition-colors duration-200"
-        >
-          Admin
-        </button>
         <a href="/" class="hover:text-[#e4299c] hover:underline transition-colors duration-200">Home</a>
         <a :href="route('about')" class="hover:text-[#e4299c] hover:underline transition-colors duration-200">About</a>
 
@@ -177,7 +172,8 @@
             class="absolute right-0 mt-2 w-44 bg-white text-[#2D1810] shadow-xl rounded-lg overflow-hidden z-50 border border-[#febd59]"
           >
             <Link :href="route('profile.edit')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c] transition-colors">Profile</Link>
-            <Link :href="route('my-services')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c] transition-colors">My services</Link>
+            <Link v-if="!user?.role === 'admin'" :href="route('my-services')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c] transition-colors">My services</Link>
+            <Link v-if="user?.role === 'admin'" :href="route('admin')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c] transition-colors">Admin panel</Link>
             <Link :href="route('notifications.index')" class="block px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c] transition-colors">Notifications</Link>
 
             <form @submit.prevent="logout" class="block border-t border-[#febd59]">
