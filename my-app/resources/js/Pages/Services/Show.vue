@@ -15,7 +15,6 @@
           <div>
             <div class="flex items-center justify-between">
               <h1 class="text-3xl font-bold">{{ service.title }}</h1>
-              <p>h</p>
               <ReportButton
                 v-if="auth.user"
                 :service-id="service.id"
