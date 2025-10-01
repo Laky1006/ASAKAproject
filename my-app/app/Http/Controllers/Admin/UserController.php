@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController extends Controller
 {
@@ -67,7 +68,7 @@ class UserController extends Controller
             'created_at' => $u->created_at,
         ]);
 
-        return Inertia::render('Admin', [
+        return Inertia::render('AdminPanel', [
             'users' => $users,
             'filters' => [
                 'search' => $search,
@@ -80,12 +81,14 @@ class UserController extends Controller
     public function destroy(Request $request, User $user)
     {
         if ($request->user()->id === $user->id) {
-            return back()->with('error', 'You cannot delete your own account.');
+            return redirect()->back()->with('error', 'You cannot delete your own account.');
         }
-
+    
         $user->delete();
-
-        return back()->with('success', 'User deleted.');
+    
+        // Return an Inertia-friendly redirect
+        return redirect()->route('admin-panel.dashboard')->with('success', 'User deleted.');
     }
+    
 
 }

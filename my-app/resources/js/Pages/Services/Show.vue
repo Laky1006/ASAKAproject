@@ -13,7 +13,13 @@
         <div class="p-6 space-y-6">
           <!-- Title + Rating -->
           <div>
-            <h1 class="text-3xl font-bold">{{ service.title }}</h1>
+            <div class="flex items-center justify-between">
+              <h1 class="text-3xl font-bold">{{ service.title }}</h1>
+              <ReportButton
+                v-if="auth.user"
+                :service-id="service.id"
+              />
+            </div>
             <div class="flex items-center gap-2">
               <div class="flex text-2xl">
                 <span
@@ -144,6 +150,7 @@ import MainLayout from '@/Layouts/MainLayout.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import Review from '@/Components/Review.vue'
+import ReportButton from '@/Components/ReportButton.vue'
 
 import { ref, computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
