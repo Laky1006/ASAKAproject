@@ -46,16 +46,24 @@ const roleBadge = (r) => ({
 
 const deletingId = ref(null)
 
+const usersList = ref(props.users.data)
+
 const confirmDelete = (u) => {
   if (u.id === (props.auth?.user?.id || 0)) return
   if (!window.confirm(`Delete user "${u.name}" (ID: ${u.id})? This cannot be undone.`)) return
 
   deletingId.value = u.id
+
   router.delete(route('admin-panel.users.destroy', u.id), {
     preserveScroll: true,
-    onFinish: () => (deletingId.value = null),
+    onFinish: () => {
+      deletingId.value = null
+      // remove deleted user locally
+      usersList.value = usersList.value.filter(user => user.id !== u.id)
+    },
   })
 }
+
 </script>
 
 <template>
@@ -72,7 +80,7 @@ const confirmDelete = (u) => {
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100">
-        <tr v-for="u in users?.data || []" :key="u.id" class="hover:bg-gray-50">
+        <tr v-for="u in usersList || []" :key="u.id" class="hover:bg-gray-50">
           <td class="px-6 py-3 text-sm text-gray-700">{{ u.id }}</td>
           <td class="px-6 py-3 text-sm font-medium text-gray-900">{{ u.name }}</td>
           <td class="px-6 py-3 text-sm text-gray-700">{{ u.email }}</td>
