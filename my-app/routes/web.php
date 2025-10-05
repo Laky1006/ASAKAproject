@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AdminReportController;
+
 
 
 Route::get('/', [ServiceController::class, 'index']);
@@ -89,8 +91,8 @@ Route::middleware(['auth','admin'])->group(function () {
     Route::delete('/admin-panel/users/{user}', [UserController::class, 'destroy'])->name('admin-panel.users.destroy');
 
     // Reports list
-    Route::get('/admin-panel/reports', [ReportController::class, 'index'])->name('admin-panel.reports.index');
-    Route::delete('/admin-panel/reports/{report}', [ReportController::class, 'destroy'])->name('admin-panel.reports.destroy');
+    Route::get('/admin-panel/reports', [AdminReportController::class, 'index'])->name('admin-panel.reports.index');
+    Route::delete('/admin-panel/reports/{report}', [AdminReportController::class, 'destroy'])->name('admin-panel.reports.destroy');
 });
 
 

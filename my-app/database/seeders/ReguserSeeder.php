@@ -11,6 +11,7 @@ class ReguserSeeder extends Seeder
 {
     public function run(): void
     {
+
         $regusers = [
             //TEST user
             [

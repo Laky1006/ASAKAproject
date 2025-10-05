@@ -11,14 +11,23 @@ const props = defineProps({
 const search = ref(props.filters?.search || '')
 const sort = ref(props.filters?.sort || 'id_desc')
 
+const sortOptions = {
+  id_asc: 'ID ↑',
+  id_desc: 'ID ↓',
+  created_asc: 'Created ↑',
+  created_desc: 'Created ↓',
+}
+
 let t
 const pushQuery = () => {
   clearTimeout(t)
   t = setTimeout(() => {
-    router.get('/admin/reports', { search: search.value, sort: sort.value }, {
-      preserveState: true,
-      replace: true
-    })
+    const params = {
+      search: search.value || undefined,
+      sort: sort.value || undefined,
+    }
+
+    router.get('/admin-panel/reports', params, { preserveState: true, replace: true })
   }, 300)
 }
 
@@ -26,11 +35,12 @@ watch(search, pushQuery)
 watch(sort, pushQuery)
 
 const deletingId = ref(null)
+
 const confirmDelete = (r) => {
   if (!window.confirm(`Delete report #${r.id}? This cannot be undone.`)) return
 
   deletingId.value = r.id
-  router.delete(route('admin.reports.destroy', r.id), {
+  router.delete(route('admin-panel.reports.destroy', r.id), {
     preserveScroll: true,
     onFinish: () => (deletingId.value = null),
   })
@@ -44,8 +54,7 @@ const confirmDelete = (r) => {
         <tr>
           <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">ID</th>
           <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">User</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Service</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Review</th>
+          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Target</th>
           <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Reason</th>
           <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Created</th>
           <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Actions</th>
@@ -54,11 +63,14 @@ const confirmDelete = (r) => {
       <tbody class="divide-y divide-gray-100">
         <tr v-for="r in reports?.data || []" :key="r.id" class="hover:bg-gray-50">
           <td class="px-6 py-3 text-sm text-gray-700">{{ r.id }}</td>
-          <td class="px-6 py-3 text-sm">{{ r.user?.name || '—' }}</td>
-          <td class="px-6 py-3 text-sm">{{ r.service?.name || '—' }}</td>
-          <td class="px-6 py-3 text-sm">{{ r.review_id || '—' }}</td>
-          <td class="px-6 py-3 text-sm">{{ r.reason }}</td>
-          <td class="px-6 py-3 text-sm">{{ new Date(r.created_at).toLocaleString() }}</td>
+          <td class="px-6 py-3 text-sm text-gray-900">{{ r.user.name }}</td>
+          <td class="px-6 py-3 text-sm text-gray-700">
+            <span v-if="r.service">{{ r.service.name }}</span>
+            <span v-else-if="r.review">Review #{{ r.review.id }}</span>
+            <span v-else class="text-gray-400">—</span>
+          </td>
+          <td class="px-6 py-3 text-sm text-gray-700">{{ r.reason }}</td>
+          <td class="px-6 py-3 text-sm text-gray-700">{{ new Date(r.created_at).toLocaleString() }}</td>
           <td class="px-6 py-3">
             <button
               @click="confirmDelete(r)"
@@ -70,8 +82,9 @@ const confirmDelete = (r) => {
             </button>
           </td>
         </tr>
+
         <tr v-if="!reports?.data?.length">
-          <td colspan="7" class="px-6 py-8 text-center text-gray-500">No reports found.</td>
+          <td colspan="6" class="px-6 py-8 text-center text-gray-500">No reports found.</td>
         </tr>
       </tbody>
     </table>

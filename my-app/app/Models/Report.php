@@ -13,7 +13,7 @@ class Report extends Model
         'reason',
     ];
 
-    public function reporter()
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
