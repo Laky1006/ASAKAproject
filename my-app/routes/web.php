@@ -102,4 +102,12 @@ Route::get('/secret', function () {
 })->middleware(['auth', 'admin']); 
 
 
+//testing page
+Route::get('/tests', function () {
+    return Inertia::render('Test'); // points to resources/js/Pages/Test.vue
+});
+
 require __DIR__ . '/auth.php';
+
+
+

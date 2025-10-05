@@ -126,7 +126,7 @@
             </div>
 
             <!-- Available Slots -->
-            <div>
+            <!-- <div>
               <InputLabel value="Available Service Dates & Times" />
               <div v-for="(slot, index) in form.available_slots" :key="index" class="flex gap-4 items-center mt-2">
                 <input
@@ -154,7 +154,47 @@
               >
                 + Add another slot
               </button>
-            </div>
+            </div> -->
+
+            <div class="bg-white p-6 shadow sm:rounded-lg sm:p-8">
+      <h2 class="text-xl font-bold mb-4">Available Service Dates & Times</h2>
+
+      <!-- use DateTimePicker -->
+      <DateTimePicker
+  :weekStartsOn="1"
+  :step="60"
+  :minDate="new Date().toISOString().slice(0,10)"
+  :disabledDates="['2025-10-10','2025-10-11']"
+  @add-slot="form.available_slots.push($event)"
+/>
+
+<ul class="mt-4">
+  <li v-for="(s,i) in slots" :key="i">{{ s.date }} at {{ s.time }}</li>
+</ul>
+
+
+      <!-- slots list -->
+      <div class="mt-4 space-y-2">
+        <div
+          v-for="(slot, index) in form.available_slots"
+          :key="index"
+          class="flex items-center justify-between border rounded px-3 py-2 bg-white"
+        >
+          <div class="text-sm">
+            <span class="font-medium">{{ slot.date }}</span>
+            <span class="mx-2">•</span>
+            <span>{{ slot.time }}</span>
+          </div>
+          <button
+            type="button"
+            @click="removeSlot(index)"
+            class="text-red-600 text-sm hover:underline"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
 
             <div v-if="Object.keys(form.errors).length" class="bg-red-100 border border-red-400 text-red-700 p-2 rounded mb-6">
               Please fix the errors above before submitting.
@@ -173,83 +213,76 @@
 </template>
 
 
-<script>
+<script setup>
+import { computed } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import MainLayout from '@/Layouts/MainLayout.vue'
 import InputLabel from '@/Components/basics/InputLabel.vue'
 import TextInput from '@/Components/basics/TextInput.vue'
 import PrimaryButton from '@/Components/basics/PrimaryButton.vue'
+import DateTimePicker from '@/Components/DateTimePicker.vue'
 
-export default {
-  props: {
-    auth: Object,
-  },
-  components: {
-    MainLayout,
-    InputLabel,
-    TextInput,
-    PrimaryButton,
-  },
-  data() {
-    return {
-      newLabel: '',
-      bannerPreview: null,
-      labelSuggestions: [
-        'Math', 'English', 'Latvian', 'Biology', 'Language', 'Coding', 'Leisure',
-      ],
-      form: useForm({
-        title: '',
-        description: '',
-        phone: '',
-        banner: null,
-        available_slots: [{ date: '', time: '' }],
-        labels: [],
-        price: '',
-      }),
-    }
-  },
-  methods: {
-    addSlot() {
-      this.form.available_slots.push({ date: '', time: '' })
-    },
-    removeSlot(index) {
-      this.form.available_slots.splice(index, 1)
-    },
-    handleBannerChange(event) {
-      this.form.banner = event.target.files[0]
-    },
-    addLabel(label) {
-      const trimmed = label.trim()
-      if (
-        trimmed &&
-        !this.form.labels.includes(trimmed) &&
-        this.form.labels.length < 10
-      ) {
-        this.form.labels.push(trimmed)
-      }
-      this.newLabel = ''
-    },
-    removeLabel(index) {
-      this.form.labels.splice(index, 1)
-    },
-    submitForm() {
-      this.form.post(route('services.store'), {
-        forceFormData: true,
-        onSuccess: () => {
-          this.form.reset()
-          this.$inertia.visit('/my-services')
-        },
-      })
-    },
+defineProps({ auth: Object })
 
-    handleBannerChange(event) {
-      const file = event.target.files[0]
-      if (file) {
-        this.form.banner = file
-        this.bannerPreview = URL.createObjectURL(file)
-      }
+const labelSuggestions = [
+  'Math', 'English', 'Latvian', 'Biology', 'Language', 'Coding', 'Leisure',
+]
+
+const form = useForm({
+  title: '',
+  description: '',
+  phone: '',
+  banner: null,
+  available_slots: [],
+  labels: [],
+  price: '',
+})
+
+const todayISO = computed(() => {
+  const d = new Date()
+  const pad = n => (n < 10 ? `0${n}` : n)
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
+})
+
+function handleAddSlot({ date, time }) {
+  const exists = form.available_slots.some(s => s.date === date && s.time === time)
+  if (!exists) form.available_slots.push({ date, time })
+}
+
+function removeSlot(index) {
+  form.available_slots.splice(index, 1)
+}
+
+function handleBannerChange(e) {
+  const file = e.target.files?.[0]
+  if (file) {
+    form.banner = file
+    // if you need a preview:
+    // bannerPreview.value = URL.createObjectURL(file)
+  }
+}
+
+function addLabel(label) {
+  const trimmed = label.trim()
+  if (trimmed && !form.labels.includes(trimmed) && form.labels.length < 10) {
+    form.labels.push(trimmed)
+  }
+}
+
+function removeLabel(index) {
+  form.labels.splice(index, 1)
+}
+
+function submitForm() {
+  form.post(route('services.store'), {
+    forceFormData: true,
+    onSuccess: () => {
+      form.reset()
+      // navigate after success
+      window.Inertia?.visit?.('/my-services') || (location.href = '/my-services')
     },
-  },
+  })
 }
 </script>
+
 
