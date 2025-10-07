@@ -7,36 +7,31 @@ import MainLayout from '@/Layouts/MainLayout.vue'
 
 const props = defineProps({
   auth: Object,
-  users: Object,    // initially empty or first load
-  reports: Object,  // initially empty
+  users: Object,
+  reports: Object,
+  tab: String,
   filters: Object,
 })
 
-// Tabs: "users" or "reports"
-const currentTab = ref('users')
+const currentTab = ref(props.tab || 'users')
 const tabs = [
   { key: 'users', label: 'Users' },
   { key: 'reports', label: 'Reports' },
 ]
 
-// State to store fetched data
 const usersData = ref(props.users)
 const reportsData = ref(props.reports)
 const filtersData = ref(props.filters || {})
 
-// Watch tab changes and fetch data dynamically
+// Refetch data on tab switch
 watch(currentTab, (tab) => {
-  if (tab === 'users') {
-    router.get(route('admin-panel.dashboard'), {}, {
-      preserveState: true,
-      onSuccess: page => { usersData.value = page.props.users }
-    })
-  } else if (tab === 'reports') {
-    router.get(route('admin-panel.reports.index'), {}, {
-      preserveState: true,
-      onSuccess: page => { reportsData.value = page.props.reports }
-    })
-  }
+  router.get(route('admin-panel.dashboard'), { tab }, {
+    preserveState: true,
+    onSuccess: (page) => {
+      usersData.value = page.props.users
+      reportsData.value = page.props.reports
+    },
+  })
 })
 </script>
 
@@ -45,7 +40,7 @@ watch(currentTab, (tab) => {
     <div class="max-w-7xl mx-auto p-6 space-y-6">
       <div>
         <h1 class="text-3xl font-bold">Admin Dashboard</h1>
-        <p class="text-gray-600">Manage users and reports on the site.</p>
+        <p class="text-gray-600">Manage users and reports.</p>
       </div>
 
       <!-- Tabs -->
@@ -54,14 +49,17 @@ watch(currentTab, (tab) => {
           v-for="tab in tabs"
           :key="tab.key"
           @click="currentTab = tab.key"
-          :class="currentTab === tab.key ? 'border-b-2 border-blue-600 font-semibold' : 'text-gray-600'"
-          class="px-4 py-2"
+          :class="[
+            'px-4 py-2',
+            currentTab === tab.key
+              ? 'border-b-2 border-blue-600 font-semibold'
+              : 'text-gray-600 hover:text-black'
+          ]"
         >
           {{ tab.label }}
         </button>
       </div>
 
-      <!-- Tables -->
       <UsersTable
         v-if="currentTab === 'users'"
         :auth="auth"
