@@ -11,7 +11,36 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminReportController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
+
+// verification
+// 2.1 Built-in auth routes + verification
+Auth::routes(['verify' => true]);  // requires laravel/ui (you installed earlier)
+
+// 2.2 The "check your email" screen (served by Inertia/Vue)
+Route::get('/email/verify', function () {
+    return Inertia::render('Auth/VerifyEmail', [
+        'status' => session('status'), // <-- passes the flash status to your Vue prop
+    ]);
+})->middleware('auth')->name('verification.notice');
+
+// 2.3 Handle the signed link from the email
+Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill(); // sets email_verified_at
+    return redirect()->route('dashboard');
+})->middleware(['auth', 'signed'])->name('verification.verify');
+
+// 2.4 Resend verification email (this matches route('verification.send') in your Vue)
+Route::post('/email/verification-notification', function (Request $request) {
+    $request->user()->sendEmailVerificationNotification();
+    return back()->with('status', 'verification-link-sent'); // your Vue checks this
+})->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+// 2.5 Protect private area: only verified users allowed
+Route::middleware(['auth','verified'])->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+});
 
 
 Route::get('/', [ServiceController::class, 'index']);

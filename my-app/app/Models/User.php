@@ -6,8 +6,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Contracts\Auth\MustVerifyEmail; // lai verification varetu izdarit
 
-class User extends Authenticatable
+
+class User extends Authenticatable implements MustVerifyEmail // implements MustVerifyEmail, tagad nozime, ka visos reģistrēšanās brīžo bus verifikācija
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
