@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import UsersTable from '@/Components/UsersTable.vue'
 import ReportsTable from '@/Components/ReportsTable.vue'
+import ServicesTable from '@/Components/ServicesTable.vue'
 import MainLayout from '@/Layouts/MainLayout.vue'
 
 const props = defineProps({
@@ -17,11 +18,14 @@ const currentTab = ref(props.tab || 'users')
 const tabs = [
   { key: 'users', label: 'Users' },
   { key: 'reports', label: 'Reports' },
+  { key: 'services', label: 'Services' },
 ]
+
 
 // ✅ use fallback defaults to avoid `null` rendering
 const usersData = computed(() => page.props.users ?? { data: [] })
 const reportsData = computed(() => page.props.reports ?? { data: [] })
+const servicesData = computed(() => page.props.services ?? { data: [] })
 const filtersData = computed(() => page.props.filters ?? {})
 
 // ✅ add a loading flag for transitions
@@ -66,7 +70,6 @@ watch(currentTab, (tab) => {
       <!-- Loader -->
       <div v-if="loading" class="text-gray-500">Loading...</div>
 
-      <!-- Users -->
       <UsersTable
         v-if="currentTab === 'users' && usersData && !loading"
         :auth="props.auth"
@@ -74,13 +77,20 @@ watch(currentTab, (tab) => {
         :filters="filtersData"
       />
 
-      <!-- Reports -->
       <ReportsTable
         v-if="currentTab === 'reports' && reportsData && !loading"
         :auth="props.auth"
         :reports="reportsData"
         :filters="filtersData"
       />
+
+      <ServicesTable
+        v-if="currentTab === 'services' && servicesData && !loading"
+        :auth="props.auth"
+        :services="servicesData"
+        :filters="filtersData"
+      />
+
     </div>
   </MainLayout>
 </template>

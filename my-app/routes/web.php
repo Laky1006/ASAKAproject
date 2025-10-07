@@ -119,6 +119,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     Route::delete('/admin-panel/users/{user}', [AdminPanelController::class, 'destroyUser'])
         ->name('admin-panel.users.destroy');
+    
+    Route::delete('/admin-panel/services/{service}', [App\Http\Controllers\Admin\AdminPanelController::class, 'destroyService'])
+        ->name('admin-panel.services.destroy');
+    
 
     Route::delete('/admin-panel/reports/{report}', [AdminPanelController::class, 'destroyReport'])
         ->name('admin-panel.reports.destroy');

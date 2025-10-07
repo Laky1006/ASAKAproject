@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Report;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -122,16 +123,50 @@ class AdminPanelController extends Controller
             // 🆕 Computed type for UI
             'type' => $r->service ? 'service' : ($r->review ? 'comment' : 'unknown'),
         ]);
+    
+    
+        if ($tab === 'services') {
+            $query = Service::with('provider.user');
+    
+            // 🔍 Search by title or provider name
+            if ($search = $request->query('search')) {
+                $query->where('title', 'like', "%{$search}%")
+                      ->orWhereHas('provider.user', fn($u) => $u->where('name', 'like', "%{$search}%"));
+            }
+    
+            // ↕️ Sorting
+            switch ($request->query('sort', 'id_desc')) {
+                case 'id_asc': $query->orderBy('id', 'asc'); break;
+                case 'id_desc': $query->orderBy('id', 'desc'); break;
+                case 'title_asc': $query->orderBy('title', 'asc'); break;
+                case 'title_desc': $query->orderBy('title', 'desc'); break;
+                default: $query->orderBy('id', 'desc'); break;
+            }
+    
+            $services = $query->paginate(10)->withQueryString()->through(fn($s) => [
+                'id' => $s->id,
+                'title' => $s->title,
+                'rating' => $s->rating,
+                'created_at' => $s->created_at,
+                'provider' => [
+                    'id' => $s->provider->id ?? null,
+                    'name' => $s->provider->user->name ?? 'Unknown',
+                ],
+            ]);
+    
+            return Inertia::render('AdminPanel', [
+                'tab' => 'services',
+                'services' => $services,
+                'users' => null,
+                'reports' => null,
+                'filters' => $filters,
+                'auth' => ['user' => $request->user()],
+            ]);
+        }
+      
 
-        return Inertia::render('AdminPanel', [
-            'tab' => 'reports',
-            'reports' => $reports,
-            'users' => null,
-            'filters' => $filters,
-            'auth' => ['user' => $request->user()],
-        ]);
     }
-
+  
     /**
      * 🗑 Delete a specific user
      */
@@ -155,4 +190,11 @@ class AdminPanelController extends Controller
 
         return back()->with('success', "Report #{$report->id} deleted successfully.");
     }
+
+    public function destroyService(Service $service)
+    {
+        $service->delete();
+        return back()->with('success', "Service '{$service->title}' deleted successfully.");
+    }
+
 }
