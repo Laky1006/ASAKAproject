@@ -1,2 +1,14 @@
 php artisan storage:link - lai varetu profila bildi redzet, kad liec
-composer require laravel/ui -- ja nekas nestarda ar verifikaciju, tad so ierakstat
+composer require laravel/ui -- SO VAJAG INSTALET
+
+
+IERAKSTAT SAVOS .ENV FAILOS TO KAS ZEMAK:
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=sniedzins100@gmail.com        # <-- fix domain
+MAIL_PASSWORD=voaetdzkagzzchvz     # <-- no spaces
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=asaka.app.test@gmail.com    # (can be same as username)
+MAIL_FROM_NAME="ASAKA Project"
