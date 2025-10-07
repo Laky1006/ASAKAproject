@@ -47,6 +47,7 @@ watch(currentTab, (tab) => {
         <p class="text-gray-600">Manage users and reports.</p>
       </div>
 
+  
       <!-- Tabs -->
       <div class="flex gap-4 border-b border-gray-200 mb-4">
         <button
