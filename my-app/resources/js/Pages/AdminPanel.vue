@@ -48,7 +48,6 @@ watch(currentTab, (tab) => {
     <div class="max-w-7xl mx-auto p-6 space-y-6">
       <div>
         <h1 class="text-3xl font-bold">Admin Dashboard</h1>
-        <p class="text-gray-600">Manage users and reports.</p>
       </div>
 
   
