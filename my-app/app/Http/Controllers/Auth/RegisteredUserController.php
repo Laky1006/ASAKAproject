@@ -52,7 +52,8 @@ class RegisteredUserController extends Controller
 
         \Illuminate\Support\Facades\Auth::login($user);
 
-        return redirect('/profile');
+        return redirect()->route('verification.notice');
+
     }
 }
 

@@ -1,0 +1,2 @@
+php artisan storage:link - lai varetu profila bildi redzet, kad liec
+composer require laravel/ui -- ja nekas nestarda ar verifikaciju, tad so ierakstat
