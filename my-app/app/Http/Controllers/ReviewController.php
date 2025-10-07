@@ -70,20 +70,27 @@ class ReviewController extends Controller
 
     public function destroy($id)
     {
-        // Extra safety: only admin should reach here (route also has 'admin' middleware)
-        if (auth()->user()?->role !== 'admin') {
-            abort(403, 'Unauthorized');
+        $user = auth()->user();
+        $review = Review::findOrFail($id);
+    
+        // Allow admins OR the owner of the review to delete
+        if ($user->role !== 'admin') {
+            $reguserId = $user->reguser?->id;
+    
+            // Prevent non-owners from deleting someone else's review
+            if ($review->reguser_id !== $reguserId) {
+                abort(403, 'Unauthorized');
+            }
         }
-
-        $review  = Review::findOrFail($id);
+    
         $service = $review->service;
-
         $review->delete();
-
+    
         if ($service) {
             $service->updateAverageRating();
         }
-
-        return back()->with('success', 'Review deleted.');
+    
+        return back()->with('success', 'Review deleted successfully.');
     }
+    
 }
