@@ -42,9 +42,13 @@ const confirmDelete = (r) => {
 
   deletingId.value = r.id
   router.delete(route('admin-panel.reports.destroy', r.id), {
-    preserveScroll: true,
-    onFinish: () => (deletingId.value = null),
-  })
+  preserveScroll: true,
+  onFinish: () => {
+    deletingId.value = null
+    router.reload({ only: ['reports'] }) 
+  },
+})
+
 }
 </script>
 
