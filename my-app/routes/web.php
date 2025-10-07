@@ -9,8 +9,7 @@ use App\Models\Service;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\AdminReportController;
+use App\Http\Controllers\Admin\AdminPanelController;
 
 
 
@@ -85,14 +84,15 @@ Route::get('/services-create', fn () => Inertia::render('Services/CreateService'
 Route::get('/services/{id}', [ServiceController::class, 'show'])->name('services.show');
 
 // Admin-only
-Route::middleware(['auth','admin'])->group(function () {
-    // Users list
-    Route::get('/admin-panel', [UserController::class, 'index'])->name('admin-panel.dashboard');
-    Route::delete('/admin-panel/users/{user}', [UserController::class, 'destroy'])->name('admin-panel.users.destroy');
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin-panel', [AdminPanelController::class, 'index'])
+        ->name('admin-panel.dashboard');
 
-    // Reports list
-    Route::get('/admin-panel/reports', [AdminReportController::class, 'index'])->name('admin-panel.reports.index');
-    Route::delete('/admin-panel/reports/{report}', [AdminReportController::class, 'destroy'])->name('admin-panel.reports.destroy');
+    Route::delete('/admin-panel/users/{user}', [AdminPanelController::class, 'destroyUser'])
+        ->name('admin-panel.users.destroy');
+
+    Route::delete('/admin-panel/reports/{report}', [AdminPanelController::class, 'destroyReport'])
+        ->name('admin-panel.reports.destroy');
 });
 
 

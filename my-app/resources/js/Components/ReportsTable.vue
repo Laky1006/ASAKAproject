@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { Link } from '@inertiajs/vue3'
 
 const props = defineProps({
   auth: Object,
@@ -64,11 +65,26 @@ const confirmDelete = (r) => {
         <tr v-for="r in reports?.data || []" :key="r.id" class="hover:bg-gray-50">
           <td class="px-6 py-3 text-sm text-gray-700">{{ r.id }}</td>
           <td class="px-6 py-3 text-sm text-gray-900">{{ r.user.name }}</td>
-          <td class="px-6 py-3 text-sm text-gray-700">
-            <span v-if="r.service">{{ r.service.name }}</span>
-            <span v-else-if="r.review">Review #{{ r.review.id }}</span>
+          <td class="px-6 py-3 text-sm text-blue-600">
+            <Link
+              v-if="r.service"
+              :href="route('services.show', r.service.id)"
+              class="hover:underline"
+            >
+              {{ r.service.title }}
+            </Link>
+
+            <Link
+              v-else-if="r.review && r.review.service_id"
+              :href="`${route('services.show', r.review.service_id)}#review-${r.review.id}`"
+              class="hover:underline"
+            >
+              Review #{{ r.review.id }}
+            </Link>
+
             <span v-else class="text-gray-400">—</span>
           </td>
+
           <td class="px-6 py-3 text-sm text-gray-700">{{ r.reason }}</td>
           <td class="px-6 py-3 text-sm text-gray-700">{{ new Date(r.created_at).toLocaleString() }}</td>
           <td class="px-6 py-3">
