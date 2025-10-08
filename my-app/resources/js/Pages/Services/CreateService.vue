@@ -7,7 +7,7 @@
         <div class="bg-white p-6 shadow sm:rounded-lg sm:p-8">
           <h1 class="text-2xl font-bold mb-6">Create a New Service</h1>
 
-          <form @submit.prevent="submitForm" class="space-y-6">
+          <form @submit.prevent="submitForm" @keydown.enter.prevent class="space-y-6">
             <!-- Title -->
             <div>
               <InputLabel for="title" value="Service Title" />
@@ -134,32 +134,11 @@
               <DateTimePicker
                 :weekStartsOn="1"
                 :step="60"
-                :minDate="todayISO"
-                :disabledDates="['2025-10-10','2025-10-11']"
-                @add-slot="handleAddSlot"
+                :slots="form.available_slots" 
+                v-model:slots="form.available_slots"
               />
 
-              <!-- slots list -->
-              <div class="mt-4 space-y-2">
-                <div
-                  v-for="(slot, index) in form.available_slots"
-                  :key="index"
-                  class="flex items-center justify-between border rounded px-3 py-2 bg-white"
-                >
-                  <div class="text-sm">
-                    <span class="font-medium">{{ slot.date }}</span>
-                    <span class="mx-2">•</span>
-                    <span>{{ slot.time }}</span>
-                  </div>
-                  <button
-                    type="button"
-                    @click="removeSlot(index)"
-                    class="text-red-600 text-sm hover:underline"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
+              
             </div>
 
             <div v-if="Object.keys(form.errors).length" class="bg-red-100 border border-red-400 text-red-700 p-2 rounded mb-6">
@@ -207,22 +186,6 @@ const form = useForm({
   labels: [],
   price: '',
 })
-
-// Local-time "today" to avoid UTC off-by-one issues
-const todayISO = computed(() => {
-  const d = new Date()
-  const pad = n => (n < 10 ? `0${n}` : n)
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
-})
-
-function handleAddSlot({ date, time }) {
-  const exists = form.available_slots.some(s => s.date === date && s.time === time)
-  if (!exists) form.available_slots.push({ date, time })
-}
-
-function removeSlot(index) {
-  form.available_slots.splice(index, 1)
-}
 
 function handleBannerChange(e) {
   const file = e.target.files?.[0]
