@@ -294,16 +294,16 @@ class ServiceController extends Controller
     public function destroy($id)
     {
         $service = Service::findOrFail($id);
-
-        // Make sure the authenticated user owns the service
-        if ($service->provider_id !== auth()->user()->provider->id) {
-            abort(403, 'Unauthorized.');
+        $user = auth()->user();
+    
+        // ✅ Ensure only the owner provider can delete
+        if ($user->role !== 'provider' || $user->provider->id !== $service->provider_id) {
+            abort(403, 'Unauthorized action.');
         }
-
-        $service->slots()->delete(); // Delete associated slots first (foreign key constraint)
+    
         $service->delete();
-
-        return redirect()->route('my-services')->with('success', 'Service deleted.');
+    
+        return redirect()->route('my-services')->with('success', 'Service deleted successfully.');
     }
 
 

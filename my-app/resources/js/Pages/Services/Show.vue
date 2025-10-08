@@ -13,7 +13,13 @@
         <div class="p-6 space-y-6">
           <!-- Title + Rating -->
           <div>
-            <h1 class="text-3xl font-bold">{{ service.title }}</h1>
+            <div class="flex items-center justify-between">
+              <h1 class="text-3xl font-bold">{{ service.title }}</h1>
+              <ReportButton
+                v-if="auth.user"
+                :service-id="service.id"
+              />
+            </div>
             <div class="flex items-center gap-2">
               <div class="flex text-2xl">
                 <span
@@ -124,14 +130,18 @@
         </div>
 
         <div v-if="reviews.length">
-          <Review
+          <div
             v-for="(review, index) in sortedReviews"
             :key="review.id ?? index"
-            :review="review"
-            :auth="auth"
-            date-format="locale"
-            @delete="deleteReview"
-          />
+            :id="`review-${review.id}`"
+          >
+          <Review
+              :review="review"
+              :auth="auth"
+              date-format="locale"
+              @delete="deleteReview"
+            />
+          </div>
         </div>
         <div v-else class="text-sm text-gray-500">No reviews yet.</div>
       </div>
@@ -144,8 +154,9 @@ import MainLayout from '@/Layouts/MainLayout.vue'
 import Datepicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 import Review from '@/Components/Review.vue'
+import ReportButton from '@/Components/ReportButton.vue'
 
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 
 const props = defineProps({
@@ -164,6 +175,25 @@ const form = ref({
 const submitting = ref(false)
 
 const page = usePage()
+
+
+onMounted(async () => {
+  const hash = window.location.hash
+  const urlParams = new URLSearchParams(window.location.search)
+  const reviewId = hash.startsWith('#review-') ? hash.replace('#review-', '') : urlParams.get('review')
+
+  if (reviewId) {
+    await nextTick() // wait until DOM is ready
+    const el = document.getElementById(`review-${reviewId}`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.classList.add('ring-2', 'ring-blue-400', 'rounded-lg')
+      // Optional: remove highlight after a moment
+      setTimeout(() => el.classList.remove('ring-2', 'ring-blue-400'), 2000)
+    }
+  }
+})
+
 const alreadyReviewed = computed(() =>
   page?.props?.errors?.[0]?.includes?.('already reviewed') ?? false
 )

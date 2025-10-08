@@ -45,7 +45,7 @@ function submitForm() {
     <section>
         <header>
             <h2 class="text-lg font-medium text-gray-900">
-                Profile Information
+                Profile Information 
             </h2>
 
             <p class="mt-1 text-sm text-gray-600">
@@ -145,7 +145,7 @@ function submitForm() {
             </div>
 
             <!-- For regusers -->
-            <div v-if="user.role === 'reguser'">
+            <!-- <div v-if="user.role === 'reguser'">
             <InputLabel for="grade" value="Grade" />
             <TextInput
                 id="grade"
@@ -154,7 +154,7 @@ function submitForm() {
                 class="mt-1 block w-full"
             />
             <InputError class="mt-2" :message="form.errors.grade" />
-            </div>
+            </div> -->
 
             <!-- For providers -->
             <div v-if="user.role === 'provider'">
