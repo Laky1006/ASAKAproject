@@ -3,9 +3,16 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 body {
     background-color: #e2ebf1;
     font-family: 'Segoe UI', sans-serif;
+}
+
+@font-face {
+    font-family: 'BaronNeueBold';
+    src: url('/fonts/BaronNeueBold.woff2') format('woff2'),
+         url('/fonts/BaronNeueBold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
 }

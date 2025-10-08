@@ -47,6 +47,10 @@ const roleBadge = (r) => ({
 const deletingId = ref(null)
 
 const usersList = ref(props.users.data)
+watch(() => props.users, (newVal) => {
+  usersList.value = newVal.data
+})
+
 
 const confirmDelete = (u) => {
   if (u.id === (props.auth?.user?.id || 0)) return
@@ -68,6 +72,27 @@ const confirmDelete = (u) => {
 
 <template>
   <div class="bg-white rounded-2xl shadow overflow-hidden">
+    <div class="p-4 flex flex-wrap items-center gap-4 border-b border-gray-100">
+      <input
+        v-model="search"
+        type="text"
+        placeholder="Search users..."
+        class="border rounded px-3 py-1 text-sm"
+      />
+
+      <select v-model="sort" class="border rounded px-2 py-1 text-sm">
+        <option v-for="(label, key) in sortOptions" :key="key" :value="key">
+          {{ label }}
+        </option>
+      </select>
+
+      <div class="flex gap-2 items-center">
+        <label v-for="r in roleFilters" :key="r" class="text-sm flex items-center gap-1">
+          <input type="checkbox" :value="r" v-model="selectedFilters" />
+          <span class="capitalize">{{ r }}</span>
+        </label>
+      </div>
+    </div>
     <table class="min-w-full divide-y divide-gray-200">
       <thead class="bg-gray-50">
         <tr>
