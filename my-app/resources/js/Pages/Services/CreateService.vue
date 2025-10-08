@@ -170,7 +170,7 @@ import DateTimePicker from '@/Components/DateTimePicker.vue'
 defineProps({ auth: Object })
 
 const labelSuggestions = [
-  'Math', 'English', 'Latvian', 'Biology', 'Language', 'Coding', 'Leisure',
+  'Nails', 'Hair', 'Skincare', 'Lashes', 'Body', 'Makeup', 'Wellness',
 ]
 
 // NEW: missing refs

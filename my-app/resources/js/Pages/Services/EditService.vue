@@ -156,7 +156,7 @@ export default {
   setup(props) {
     const newLabel = ref('')
     const labelSuggestions = [
-      'Math', 'English', 'Latvian', 'Biology', 'Language', 'Coding', 'Leisure',
+      'Nails', 'Hair', 'Skincare', 'Lashes', 'Body', 'Makeup', 'Wellness',
     ]
 
     const form = useForm({
