@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 php artisan storage:link - lai varetu profila bildi redzet, kad liec
 composer require laravel/ui -- SO VAJAG INSTALET
 
 
 
 
+=======
+zbal
+>>>>>>> 7bdbd72a7bf737ca98187fadf6ee8de91dc2cc51
