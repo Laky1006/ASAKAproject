@@ -60,7 +60,7 @@ const submit = () => {
       <div class="mt-4">
         <InputLabel for="password" value="Password" />
         <div class="relative">
-            <TextInput s
+            <TextInput ss
                 id="password"
                 :type="showPassword ? 'text' : 'password'"
                 class="mt-1 block w-full pr-10"    
