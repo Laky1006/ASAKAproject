@@ -25,7 +25,8 @@
                 class="w-full border rounded px-3 py-2"
                 placeholder="Write a short description..."
               ></textarea>
-              <p v-if="form.errors.title" class="text-red-500 text-sm mt-1">{{ form.errors.description }}</p>
+              <!-- FIX: show description errors under description -->
+              <p v-if="form.errors.description" class="text-red-500 text-sm mt-1">{{ form.errors.description }}</p>
             </div>
 
             <!-- Banner Image -->
@@ -48,7 +49,8 @@
             <div>
               <InputLabel for="phone" value="Contact Phone Number" />
               <TextInput v-model="form.phone" id="phone" class="w-full" placeholder="+1234567890" />
-              <p v-if="form.errors.title" class="text-red-500 text-sm mt-1">{{ form.errors.phone  }}</p>
+              <!-- FIX: show phone errors under phone -->
+              <p v-if="form.errors.phone" class="text-red-500 text-sm mt-1">{{ form.errors.phone }}</p>
             </div>
 
             <!-- Price -->
@@ -65,7 +67,6 @@
               />
               <p v-if="form.errors.price" class="text-red-500 text-sm mt-1">{{ form.errors.price }}</p>
             </div>
-
 
             <!-- Labels -->
             <div>
@@ -94,7 +95,7 @@
                 :disabled="form.labels.length >= 10"
               />
 
-              <!-- Add button (optional) -->
+              <!-- Add button -->
               <button
                 type="button"
                 class="mt-2 bg-blue-600 text-white px-4 py-1 rounded text-sm"
@@ -126,75 +127,40 @@
             </div>
 
             <!-- Available Slots -->
-            <!-- <div>
-              <InputLabel value="Available Service Dates & Times" />
-              <div v-for="(slot, index) in form.available_slots" :key="index" class="flex gap-4 items-center mt-2">
-                <input
-                  type="date"
-                  v-model="slot.date"
-                  class="border px-2 py-1 rounded w-1/3"
-                />
-                <input
-                  type="time"
-                  v-model="slot.time"
-                  class="border px-2 py-1 rounded w-1/3"
-                />
-                <button
-                  type="button"
-                  @click="removeSlot(index)"
-                  class="text-red-500 text-sm hover:underline"
-                >
-                  Remove
-                </button>
-              </div>
-              <button
-                type="button"
-                @click="addSlot"
-                class="mt-2 text-blue-500 hover:underline text-sm"
-              >
-                + Add another slot
-              </button>
-            </div> -->
-
             <div class="bg-white p-6 shadow sm:rounded-lg sm:p-8">
-      <h2 class="text-xl font-bold mb-4">Available Service Dates & Times</h2>
+              <h2 class="text-xl font-bold mb-4">Available Service Dates & Times</h2>
 
-      <!-- use DateTimePicker -->
-      <DateTimePicker
-  :weekStartsOn="1"
-  :step="60"
-  :minDate="new Date().toISOString().slice(0,10)"
-  :disabledDates="['2025-10-10','2025-10-11']"
-  @add-slot="form.available_slots.push($event)"
-/>
+              <!-- DateTimePicker with double-click to type time -->
+              <DateTimePicker
+                :weekStartsOn="1"
+                :step="60"
+                :minDate="todayISO"
+                :disabledDates="['2025-10-10','2025-10-11']"
+                @add-slot="handleAddSlot"
+              />
 
-<ul class="mt-4">
-  <li v-for="(s,i) in slots" :key="i">{{ s.date }} at {{ s.time }}</li>
-</ul>
-
-
-      <!-- slots list -->
-      <div class="mt-4 space-y-2">
-        <div
-          v-for="(slot, index) in form.available_slots"
-          :key="index"
-          class="flex items-center justify-between border rounded px-3 py-2 bg-white"
-        >
-          <div class="text-sm">
-            <span class="font-medium">{{ slot.date }}</span>
-            <span class="mx-2">•</span>
-            <span>{{ slot.time }}</span>
-          </div>
-          <button
-            type="button"
-            @click="removeSlot(index)"
-            class="text-red-600 text-sm hover:underline"
-          >
-            Remove
-          </button>
-        </div>
-      </div>
-    </div>
+              <!-- slots list -->
+              <div class="mt-4 space-y-2">
+                <div
+                  v-for="(slot, index) in form.available_slots"
+                  :key="index"
+                  class="flex items-center justify-between border rounded px-3 py-2 bg-white"
+                >
+                  <div class="text-sm">
+                    <span class="font-medium">{{ slot.date }}</span>
+                    <span class="mx-2">•</span>
+                    <span>{{ slot.time }}</span>
+                  </div>
+                  <button
+                    type="button"
+                    @click="removeSlot(index)"
+                    class="text-red-600 text-sm hover:underline"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
 
             <div v-if="Object.keys(form.errors).length" class="bg-red-100 border border-red-400 text-red-700 p-2 rounded mb-6">
               Please fix the errors above before submitting.
@@ -212,9 +178,8 @@
   </MainLayout>
 </template>
 
-
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onBeforeUnmount } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import MainLayout from '@/Layouts/MainLayout.vue'
 import InputLabel from '@/Components/basics/InputLabel.vue'
@@ -228,6 +193,11 @@ const labelSuggestions = [
   'Math', 'English', 'Latvian', 'Biology', 'Language', 'Coding', 'Leisure',
 ]
 
+// NEW: missing refs
+const newLabel = ref('')
+const bannerPreview = ref(null)
+let lastObjectUrl = null
+
 const form = useForm({
   title: '',
   description: '',
@@ -238,6 +208,7 @@ const form = useForm({
   price: '',
 })
 
+// Local-time "today" to avoid UTC off-by-one issues
 const todayISO = computed(() => {
   const d = new Date()
   const pad = n => (n < 10 ? `0${n}` : n)
@@ -255,17 +226,22 @@ function removeSlot(index) {
 
 function handleBannerChange(e) {
   const file = e.target.files?.[0]
-  if (file) {
-    form.banner = file
-    // if you need a preview:
-    // bannerPreview.value = URL.createObjectURL(file)
-  }
+  if (!file) return
+  form.banner = file
+  if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl)
+  lastObjectUrl = URL.createObjectURL(file)
+  bannerPreview.value = lastObjectUrl
 }
 
+onBeforeUnmount(() => {
+  if (lastObjectUrl) URL.revokeObjectURL(lastObjectUrl)
+})
+
 function addLabel(label) {
-  const trimmed = label.trim()
+  const trimmed = (label || '').trim()
   if (trimmed && !form.labels.includes(trimmed) && form.labels.length < 10) {
     form.labels.push(trimmed)
+    newLabel.value = ''
   }
 }
 
@@ -278,11 +254,10 @@ function submitForm() {
     forceFormData: true,
     onSuccess: () => {
       form.reset()
-      // navigate after success
+      bannerPreview.value = null
+      if (lastObjectUrl) { URL.revokeObjectURL(lastObjectUrl); lastObjectUrl = null }
       window.Inertia?.visit?.('/my-services') || (location.href = '/my-services')
     },
   })
 }
 </script>
-
-

@@ -163,5 +163,34 @@ function emitAdd() {
 </script>
 
 <style scoped>
+/* Clamp the inline overlay height */
+:deep(.dp--overlay-relative) {
+  max-height: 60px !important;   /* caps the inline height */
+  height: auto !important;        /* let max-height take effect */
+  overflow: hidden !important;    /* cut off extra space */
+}
 
+/* tighten the inner columns so they fit the 50px cap */
+:deep(.dp__time_picker_inline_container) {
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+:deep(.dp__time_col) {
+  max-height: 60px !important;
+}
+
+/* make the up/down buttons shorter so they don't push height */
+:deep(.dp__tp_inline_btn_top),
+:deep(.dp__tp_inline_btn_bottom) {
+  height: 16px !important;
+  padding: 0 !important;
+}
+
+/* reduce the number display line-height */
+:deep(.dp__time_display_inline) {
+  line-height: 18px !important;
+  font-size: 0.9rem !important;
+}
 </style>
+
