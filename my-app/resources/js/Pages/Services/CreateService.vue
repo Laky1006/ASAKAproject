@@ -136,6 +136,7 @@
                 :step="60"
                 :slots="form.available_slots" 
                 v-model:slots="form.available_slots"
+                variant="provider"
               />
 
               

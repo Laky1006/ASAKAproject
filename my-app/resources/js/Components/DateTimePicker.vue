@@ -14,7 +14,7 @@
         :enable-time-picker="false"
         :week-start="weekStartsOn"
         :min-date="todayISO"
-        :disabled-dates="disabledDatesParsed"
+        :disabled-dates="props.variant === 'applicant' ? applicantDisablePredicate : disabledDatesParsed"
         :markers="dayMarkers" 
         @update:model-value="onDatePicked"
       />
@@ -23,77 +23,111 @@
     <!-- time -->
     <div class="bg-white border rounded-lg p-4">
       <div class="space-y-4">
-        <div class="text-sm text-gray-600">
-          Selected date:
-          <span class="font-medium" v-if="selectedDate">{{ selectedDate }}</span>
-          <span v-else class="italic">none</span>
-        </div>
 
-        <!-- time picker -->
-        <div>
-          <label class="text-sm block mb-1">Time</label>
-          <DatePicker
-            ref="tp"
-            v-model="timeModel"
-            time-picker
-            :is-24="true"
-            text-input
-            format="HH:mm"
-            :minutes-increment="minuteStep"
-            :hours-increment="1"
-            :text-input-options="{ enterSubmit: true, tabSubmit: true }"
-            :action-row="{ showNow:false, showSelect:true, showCancel:false }"
-            @open="bindEnter"
-            @closed="unbindEnter"
-          />
-        </div>
-
-        <div class="flex items-center gap-2">
-          <button
-            type="button"
-            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-            :disabled="!selectedDate || timeModel === null"
-            :title="!selectedDate ? 'Pick a date first' : (timeModel===null ? 'Pick a time' : '')"
-            @click="emitAdd"
-          >
-            Add
-          </button>
-
-          <button
-            type="button"
-            class="px-3 py-2 border rounded hover:bg-gray-50"
-            @click="clearTime"
-          >
-            Clear time
-          </button>
-        </div>
-
-        <div v-if="selectedDate" class="mt-2">
-          <div class="text-sm font-medium mb-2">
-            Times on {{ selectedDate }}
+        <div v-if="props.variant === 'provider'" class="space-y-4">
+        <!-- time picker FOR PROVIDER -->
+          <div class="text-sm text-gray-600">
+            Selected date:
+            <span class="font-medium" v-if="selectedDate">{{ selectedDate }}</span>
+            <span v-else class="italic">none</span>
+          </div>
+          <div>
+            <label class="text-sm block mb-1">Time</label>
+            <DatePicker
+              ref="tp"
+              v-model="timeModel"
+              time-picker
+              :is-24="true"
+              text-input
+              format="HH:mm"
+              :minutes-increment="minuteStep"
+              :hours-increment="1"
+              :text-input-options="{ enterSubmit: true, tabSubmit: true }"
+              :action-row="{ showNow:false, showSelect:true, showCancel:false }"
+              @open="bindEnter"
+              @closed="unbindEnter"
+            />
           </div>
 
-          <div v-if="daySlots.length" class="space-y-2 max-h-48 overflow-auto">
-            <div
-              v-for="slot in daySlots"
-              :key="slot.time"
-              class="flex items-center justify-between border rounded px-3 py-2 bg-white"
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              :disabled="!selectedDate || timeModel === null"
+              :title="!selectedDate ? 'Pick a date first' : (timeModel===null ? 'Pick a time' : '')"
+              @click="emitAdd"
             >
-              <span class="text-sm">{{ slot.time }}</span>
-              <button
-                type="button"
-                class="text-red-600 text-sm hover:underline"
-                @click="emitRemove(slot.time)"
+              Add
+            </button>
+
+            <button
+              type="button"
+              class="px-3 py-2 border rounded hover:bg-gray-50"
+              @click="clearTime"
+            >
+              Clear time
+            </button>
+          </div>
+
+          <div v-if="selectedDate" class="mt-2">
+            <div class="text-sm font-medium mb-2">
+              Times on {{ selectedDate }}
+            </div>
+
+            <div v-if="daySlots.length" class="space-y-2 max-h-48 overflow-auto">
+              <div
+                v-for="slot in daySlots"
+                :key="slot.time"
+                class="flex items-center justify-between border rounded px-3 py-2 bg-white"
               >
-                Remove
+                <span class="text-sm">{{ slot.displayTime }}</span>
+                <button
+                  type="button"
+                  class="text-red-600 text-sm hover:underline"
+                  @click="emitRemove(slot.time)"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+
+            <p v-else class="text-sm text-gray-500 italic">
+              No times added for this date yet.
+            </p>
+          </div>
+        </div>
+        
+        <!-- time picker FOR REGUSER -->
+        <div v-else class="space-y-4">
+          <div class="text-lg font-medium mb-2">
+              Available times on
+              <span class="font-medium" v-if="selectedDate">{{ selectedDate }}</span>
+              <span v-else class="italic text-gray-500">select date...</span>
+            </div>
+
+          <div v-if="selectedDate">            
+
+            <div v-if="daySlots.length" class="grid grid-cols-2 gap-2">
+              <button
+                v-for="slot in daySlots"
+                :key="slot.time"
+                type="button"
+                class="px-3 py-2 border rounded hover:bg-gray-50"
+                :class="{
+                  'ring-2 ring-blue-600': isSelected(slot)
+                }"
+                @click="selectApplicantSlot(slot)"
+              >
+                {{ slot.displayTime }}
               </button>
             </div>
-          </div>
 
-          <p v-else class="text-sm text-gray-500 italic">
-            No times added for this date yet.
-          </p>
+            <p v-else class="text-sm text-gray-500 italic">
+              No times available for this date.
+            </p>
+          </div>
         </div>
+        
 
       </div>
     </div>
@@ -107,14 +141,21 @@ import '@vuepic/vue-datepicker/dist/main.css'
 
 
 const props = defineProps({
+  variant: { type: String, default: 'provider' }, 
   weekStartsOn: { type: Number, default: 1 },
   step: { type: Number, default: 60 },
   minDate: { type: String, default: null },
   disabledDates: { type: Array, default: () => [] },
   slots: { type: Array, default: () => [] }, // [{ date:'YYYY-MM-DD', time:'HH:mm' }]
+  modelValue: { type: Object, default: null },
 })
 
-const emit = defineEmits(['add-slot', 'remove-slot', 'update:slots',])
+const emit = defineEmits([
+  'add-slot',
+  'remove-slot',
+  'update:slots',
+  'update:modelValue',    
+])
 
 // states and refs
 const selectedDate = ref('')
@@ -135,14 +176,31 @@ function ymd(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.ge
 
 // makes minDate and disabledDates to actual date objects (midnight)
 const todayISO = computed(() => {
-  const d = new Date()
-  const pad = n => (n < 10 ? `0${n}` : n)
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  if (props.minDate) return new Date(props.minDate + 'T00:00:00')
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
 })
 
 const disabledDatesParsed = computed(() =>
   (props.disabledDates || []).map(d => new Date(d + 'T00:00:00'))
 )
+
+const allowedDays = computed(() => {
+  const s = new Set()
+  for (const item of (props.slots || [])) {
+    if (item && typeof item.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.date)) {
+      s.add(item.date)
+    }
+  }
+  return s
+})
+
+function applicantDisablePredicate(date) {
+  // If there are no allowed days, don't accidentally disable everything.
+  // You can flip this to `return true` if you prefer "lock all" when empty.
+  if (!allowedDays.value.size) return true
+  return !allowedDays.value.has(ymd(date))
+}
 
 // minute increment 
 const minuteStep = computed(() => {
@@ -151,10 +209,13 @@ const minuteStep = computed(() => {
 })
 
 const daySlots = computed(() => {
-  if (!selectedDate.value) return []
+  if (!selectedDate.value || !Array.isArray(props.slots)) return []
   return props.slots
-    .filter(s => s.date === selectedDate.value)
-    .slice()
+    .filter(s => s && s.date === selectedDate.value && typeof s.time === 'string')
+    .map(s => ({
+      ...s,
+      displayTime: s.time.split(':').slice(0,2).join(':') // "HH:mm"
+    }))
     .sort((a, b) => a.time.localeCompare(b.time))
 })
 
@@ -190,6 +251,15 @@ function removeSlot(date, time) {
   emit('update:slots', next)
 }
 
+function isSelected(slot) {
+  return props.modelValue
+    && props.modelValue.date === selectedDate.value
+    && props.modelValue.time === slot.time
+}
+
+function selectApplicantSlot(slot) {
+  emit('update:modelValue', { date: selectedDate.value, time: slot.time })
+}
 
 /* =========================
    Event Handlers
