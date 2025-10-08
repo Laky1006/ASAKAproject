@@ -75,13 +75,13 @@ class ProfileController extends Controller
         if ($user->role === 'provider') {
             if ($user->provider) {
                 $user->provider->update([
-                    'education' => $request->input('education'),
+                    'location' => $request->input('location'),
                     'bio' => $request->input('bio'),
                 ]);
             } else {
                 \App\Models\Provider::create([
                     'user_id' => $user->id,
-                    'education' => $request->input('education'),
+                    'location' => $request->input('location'),
                     'bio' => $request->input('bio'),
                 ]);
             }

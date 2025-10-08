@@ -92,7 +92,7 @@ const props = defineProps({
 
 defineEmits(['delete'])
 
-// ✅ Logic: show delete if admin OR the author of the review
+// show delete if admin OR the author of the review
 const canDelete = computed(() => {
   // If override is set, respect it
   if (props.canDeleteOverride !== null) return !!props.canDeleteOverride
@@ -112,14 +112,14 @@ const canDelete = computed(() => {
 const formattedDate = computed(() => {
   const raw = props.review?.created_at
   if (!raw) return ''
-  const d = typeof raw === 'string' || typeof raw === 'number' ? new Date(raw) : raw
 
-  if (props.dateFormat === 'iso') return d.toISOString().slice(0, 10)
-  if (props.dateFormat === 'locale') return d.toLocaleString()
-  try {
-    return new Intl.DateTimeFormat(undefined, props.dateFormat).format(d)
-  } catch {
-    return d.toLocaleString()
+  // If backend sent “20 minutes ago”, just show it.
+  if (typeof raw === 'string' && /\bago\b|just now|yesterday|in \d/.test(raw)) {
+    return raw
   }
+
+  // otherwise try to parse/format (ISO, timestamps, etc.)
+  const d = new Date(raw)
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleString()
 })
 </script>

@@ -37,8 +37,8 @@ class ProviderSeeder extends Seeder
 
             Provider::create([
                 'user_id' => $user->id,
-                'education' => 'Master in Education',
-                'bio' => 'Experienced provider in various subjects.',
+                'location' => 'Riga',
+                'bio' => 'Lalalalala',
             ]);
         }
     }

@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\Review;
 use App\Models\Notification;
 use App\Models\Reguser;
+use App\Models\ServiceSlot;
 
 class ReviewController extends Controller
 {
@@ -25,28 +26,43 @@ class ReviewController extends Controller
 
         // Allow only reguser or admin to post reviews
         if (! in_array($user->role, ['reguser', 'admin'])) {
-            return back()->withErrors(['Only regusers or admin can leave reviews.']);
+            return back()->withErrors(['Only registered users can leave reviews.']);
         }
 
         // Ensure there is a Reguser profile (admin should have one from seeder; still safe)
         $reguser = $user->reguser ?: Reguser::firstOrCreate(['user_id' => $user->id]);
         $reguserId = $reguser->id;
+        $serviceId = (int) $request->service_id;
 
-        $serviceId = $request->service_id;
+        if ($user->role === 'reguser') {
+            $hasBookedSlot = ServiceSlot::where('service_id', $serviceId)
+                ->where('reguser_id', $reguserId)
+                ->where('is_available', false) // means it's booked
+                ->exists();
 
-        // Prevent duplicate reviews from the same reguser for the same service
-        $existing = Review::where('service_id', $serviceId)
+            if (! $hasBookedSlot) {
+                return back()->withErrors([
+                    'review' => 'You can review this service only after booking at least once.'
+                ])->withInput();
+            }
+        }
+
+        $latest = Review::where('service_id', $serviceId)
             ->where('reguser_id', $reguserId)
+            ->latest('created_at')
             ->first();
 
-        if ($existing) {
-            return back()->withErrors(['You have already reviewed this service.']);
+        if ($latest && $latest->created_at->gt(now()->subDays(2))) {
+            $nextDate = $latest->created_at->addDays(2)->toDateString();
+            return back()->withErrors([
+                'review' => "You can post another review for this service on {$nextDate}."
+            ])->withInput();
         }
 
         $review = Review::create([
             'service_id' => $serviceId,
             'reguser_id' => $reguserId,
-            'rating'     => $request->rating,
+            'rating'     => (int) $request->rating,
             'comment'    => $request->comment,
         ]);
 

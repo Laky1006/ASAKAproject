@@ -13,11 +13,25 @@ return new class extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reguser_id')->constrained()->onDelete('cascade');
-            $table->foreignId('service_id')->constrained()->onDelete('cascade');
-            $table->unsignedTinyInteger('rating'); // from 1 to 5
+
+            // Relationships
+            $table->foreignId('reguser_id')
+                ->constrained()
+                ->onDelete('cascade');
+
+            $table->foreignId('service_id')
+                ->constrained()
+                ->onDelete('cascade');
+
+            // Review content
+            $table->unsignedTinyInteger('rating'); // 1–5
             $table->text('comment')->nullable();
+
             $table->timestamps();
+
+            //allows multiple reviews per person
+            $table->index(['service_id']);
+            $table->index(['reguser_id']);
         });
     }
 
@@ -26,6 +40,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('service_reviews');
+        Schema::dropIfExists('reviews'); // fixed wrong table name
     }
 };

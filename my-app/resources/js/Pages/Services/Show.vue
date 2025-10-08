@@ -103,28 +103,42 @@
               @click="form.rating = n"
             >★</span>
           </div>
+          <p v-if="form.errors.rating" class="text-red-600 text-sm -mt-1 mb-2">
+            {{ form.errors.rating }}
+          </p>
 
           <textarea
             v-model="form.comment"
             rows="3"
             class="w-full border rounded px-3 py-2"
+            :class="form.errors.comment ? 'border-red-500' : 'border-gray-300'"
+            :aria-invalid="!!form.errors.comment"
             placeholder="Write a comment (optional)"
           ></textarea>
 
-          <div v-if="alreadyReviewed" class="text-red-500 text-sm mt-2">
-            You have already left a review here.
+          <p v-if="form.errors.comment" class="text-red-600 text-sm mt-1">
+            {{ form.errors.comment }}
+          </p>
+
+          <div v-if="form.errors.review" class="text-red-500 text-sm mt-2">
+            {{ form.errors.review }}
           </div>
 
           <button
             @click="submitReview"
+            :disabled="form.processing"
             class="mt-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 text-sm"
           >
-            Post Review
+            {{ form.processing ? 'Posting...' : 'Post Review' }}
           </button>
+
+          <p v-if="flash.success" class="text-green-600 text-sm mt-2">
+            {{ flash.success }}
+          </p>
         </div>
 
         <div v-else class="text-gray-500 italic mb-6">
-          You must be signed in as a reguser to leave a review.
+          You must be a registered user to leave a review.
         </div>
 
         <div v-if="reviews.length">
@@ -154,7 +168,7 @@ import Review from '@/Components/Review.vue'
 import ReportButton from '@/Components/ReportButton.vue'
 
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { router, usePage, useForm } from '@inertiajs/vue3'  
 
 // Props
 const props = defineProps({
@@ -163,15 +177,21 @@ const props = defineProps({
   reviews: Array,
 })
 
-// State
-const form = ref({ rating: 0, comment: '' })
-const submitting = ref(false)
-const page = usePage()
+// --- useForm replaces your manual ref + error handling
+const form = useForm({
+  service_id: props.service.id,
+  rating: 0,
+  comment: '',
+})
+
+// Keep if you use flash messages elsewhere
+const page  = usePage()
+const flash = computed(() => page?.props?.flash ?? {})
 
 // Applicant picker
-const pickedSlot = ref(null) // { date:'YYYY-MM-DD', time:'HH:mm' } or null
+const pickedSlot = ref(null)
 
-// Lifecycle — scroll to highlighted review
+// Scroll-to-highlight (unchanged)
 onMounted(async () => {
   const hash = window.location.hash
   const urlParams = new URLSearchParams(window.location.search)
@@ -188,46 +208,39 @@ onMounted(async () => {
   }
 })
 
-// Computed helpers
-const alreadyReviewed = computed(() =>
-  page?.props?.errors?.[0]?.includes?.('already reviewed') ?? false
-)
-
+// For calendar slots (unchanged)
 const normalizedSlots = computed(() =>
   (props.service.slots ?? [])
     .filter(s => s.is_available)
     .map(s => ({ date: s.date, time: s.time }))
 )
 
-// Review submission
+// --- useForm submit
 function submitReview() {
-  if (!form.value.rating && !form.value.comment.trim()) return
+  // Optional client-side guard (keeps behavior you had)
+  if (!form.rating && !form.comment.trim()) return
 
-  submitting.value = true
-  router.post(
-    route('reviews.store'),
-    {
+  form.post(route('reviews.store'), {
+    preserveScroll: true,
+    data: {
       service_id: props.service.id,
-      rating: form.value.rating,
-      comment: form.value.comment,
+      rating: form.rating,
+      comment: form.comment,
     },
-    {
-      preserveScroll: true,
-      onFinish: () => {
-        form.value.comment = ''
-        form.value.rating = 0
-        submitting.value = false
-      },
-    }
-  )
+    onSuccess: () => {
+      // Reset after success
+      form.reset('comment', 'rating')
+    },
+    // onError: () => { // errors in form.errors.* automatically
+    // },
+  })
 }
 
-// Booking
+// Booking (unchanged)
 function submitSignup(time, dateOverride) {
   const date = dateOverride || pickedSlot.value?.date
   const t = time || pickedSlot.value?.time
   if (!date || !t) return
-
   if (!confirm(`Do you want to book this slot on ${date} at ${t}?`)) return
 
   router.post(
@@ -237,13 +250,13 @@ function submitSignup(time, dateOverride) {
   )
 }
 
-// Delete review
+// Delete review (unchanged)
 function deleteReview(reviewId) {
   if (!confirm('Are you sure you want to delete this review?')) return
   router.delete(route('reviews.destroy', reviewId), { preserveScroll: true })
 }
 
-// Review sorting
+// Sort reviews (unchanged)
 const sortedReviews = computed(() => {
   if (!props.reviews || !Array.isArray(props.reviews)) return []
   if (props.auth?.user?.role === 'reguser' && props.auth.user.reguser?.id) {
@@ -255,4 +268,3 @@ const sortedReviews = computed(() => {
   return props.reviews
 })
 </script>
-
