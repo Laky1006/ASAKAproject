@@ -15,6 +15,7 @@ export default {
                 baron: ['BaronNeueBold', ...defaultTheme.fontFamily.sans],
                 heading: ['Manrope', ...defaultTheme.fontFamily.sans],
                 body: ['Inter', ...defaultTheme.fontFamily.sans],
+                display: ['Jost', ...defaultTheme.fontFamily.sans],
             },
         },
     },

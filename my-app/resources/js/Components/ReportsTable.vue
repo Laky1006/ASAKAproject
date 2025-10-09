@@ -1,7 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { router } from '@inertiajs/vue3'
-import { Link } from '@inertiajs/vue3'
+import { router, Link } from '@inertiajs/vue3'
 
 const props = defineProps({
   auth: Object,
@@ -11,172 +10,112 @@ const props = defineProps({
 
 const search = ref(props.filters?.search || '')
 const sort = ref(props.filters?.sort || 'id_desc')
-const type = ref(props.filters?.type || '') // 🆕 Type filter (service/comment)
 
 const sortOptions = {
-  id_asc: 'ID ↑',
   id_desc: 'ID ↓',
-  created_asc: 'Created ↑',
-  created_desc: 'Created ↓',
-}
-
-const typeOptions = {
-  '': 'All Types',
-  service: 'Services',
-  comment: 'Comments',
+  id_asc: 'ID ↑',
 }
 
 let t
 const pushQuery = () => {
   clearTimeout(t)
   t = setTimeout(() => {
-    const params = {
+    router.get('/admin-panel', {
+      tab: 'reports',
       search: search.value || undefined,
       sort: sort.value || undefined,
-      type: type.value || undefined, // 🆕 Include type in query
-    }
-
-    router.get(route('admin-panel.dashboard'), { 
-      tab: 'reports',
-      ...params,
-    }, { 
-      preserveState: true, 
-      replace: true 
-    })
+    }, { preserveState: true, replace: true })
   }, 300)
 }
 
 watch(search, pushQuery)
 watch(sort, pushQuery)
-watch(type, pushQuery) // 🆕 Watch type filter
 
 const deletingId = ref(null)
+const reportsList = ref(props.reports.data)
+watch(() => props.reports, (newVal) => {
+  reportsList.value = newVal.data
+})
 
 const confirmDelete = (r) => {
-  if (!window.confirm(`Delete report #${r.id}? This cannot be undone.`)) return
-
+  if (!window.confirm(`Delete report ID: ${r.id}?`)) return
   deletingId.value = r.id
+
   router.delete(route('admin-panel.reports.destroy', r.id), {
     preserveScroll: true,
     onFinish: () => {
       deletingId.value = null
-      router.reload({ only: ['reports'] }) 
+      reportsList.value = reportsList.value.filter(x => x.id !== r.id)
     },
   })
 }
 </script>
 
 <template>
-  <div class="bg-white rounded-2xl shadow overflow-hidden">
-    <!-- Filters -->
-    <div class="p-4 flex flex-wrap items-center gap-4 border-b border-gray-100">
+  <div class="backdrop-blur-lg bg-white/40 rounded-2xl shadow-2xl border border-white/60 overflow-hidden font-heading">
+    
+    <!-- Search/Filter Bar -->
+    <div class="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 border-b border-white/40 bg-white/20 backdrop-blur-sm">
       <input
         v-model="search"
         type="text"
         placeholder="Search reports..."
-        class="border rounded px-3 py-1 text-sm"
+        class="border border-white/40 rounded-lg px-3 py-2 text-sm backdrop-blur-sm bg-white/50 focus:bg-white/70 focus:ring-2 focus:ring-[#e4299c] transition-all w-full sm:w-auto"
       />
 
-      <select v-model="sort" class="border rounded px-2 py-1 text-sm">
+      <select v-model="sort" class="border border-white/40 rounded-lg px-3 py-2 text-sm backdrop-blur-sm bg-white/50 focus:bg-white/70 focus:ring-2 focus:ring-[#e4299c] transition-all w-full sm:w-auto">
         <option v-for="(label, key) in sortOptions" :key="key" :value="key">
-          {{ label }}
-        </option>
-      </select>
-
-      <!-- 🆕 Type Filter -->
-      <select v-model="type" class="border rounded px-2 py-1 text-sm">
-        <option v-for="(label, key) in typeOptions" :key="key" :value="key">
           {{ label }}
         </option>
       </select>
     </div>
 
-    <!-- Table -->
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">ID</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">User</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Target</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Type</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Reason</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Created</th>
-          <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600">Actions</th>
-        </tr>
-      </thead>
+    <!-- Responsive Table Wrapper -->
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-white/30">
+        <thead class="bg-white/30 backdrop-blur-sm">
+          <tr>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-[#2D1810] uppercase tracking-wider">ID</th>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-[#2D1810] uppercase tracking-wider">Reporter</th>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-[#2D1810] uppercase tracking-wider">Reason</th>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-[#2D1810] uppercase tracking-wider hidden lg:table-cell">Created</th>
+            <th class="px-4 sm:px-6 py-3 text-left text-xs font-bold text-[#2D1810] uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/20 font-body">
+          <tr v-for="r in reportsList" :key="r.id" class="hover:bg-white/30 transition-colors duration-150">
+            <td class="px-4 sm:px-6 py-3 text-sm text-[#6b5b73] font-medium">{{ r.id }}</td>
+            <td class="px-4 sm:px-6 py-3 text-sm font-semibold text-[#2D1810]">{{ r.reporter?.name || 'Unknown' }}</td>
+            <td class="px-4 sm:px-6 py-3 text-sm text-[#6b5b73]">{{ r.reason || '—' }}</td>
+            <td class="px-4 sm:px-6 py-3 text-sm text-[#6b5b73] hidden lg:table-cell">{{ new Date(r.created_at).toLocaleString() }}</td>
+            <td class="px-4 sm:px-6 py-3">
+              <button
+                @click="confirmDelete(r)"
+                class="px-3 py-1.5 text-xs rounded-lg bg-red-500/80 backdrop-blur-sm text-white hover:bg-red-600 disabled:opacity-50 transition-all duration-200 font-semibold"
+                :disabled="deletingId === r.id"
+              >
+                Delete
+              </button>
+            </td>
+          </tr>
 
-      <tbody class="divide-y divide-gray-100">
-        <tr v-for="r in reports?.data || []" :key="r.id" class="hover:bg-gray-50">
-          <td class="px-6 py-3 text-sm text-gray-700">{{ r.id }}</td>
-          <td class="px-6 py-3 text-sm text-gray-900">{{ r.user.name }}</td>
-
-          <td class="px-6 py-3 text-sm text-blue-600">
-            <Link
-              v-if="r.service"
-              :href="route('services.show', r.service.id)"
-              class="hover:underline"
-            >
-              {{ r.service.title }}
-            </Link>
-
-            <Link
-              v-else-if="r.review && r.review.service_id"
-              :href="`${route('services.show', r.review.service_id)}#review-${r.review.id}`"
-              class="hover:underline"
-            >
-              Review #{{ r.review.id }}
-            </Link>
-
-            <span v-else class="text-gray-400">—</span>
-          </td>
-
-          <!-- 🆕 Type Column -->
-          <td class="px-6 py-3 text-sm">
-            <span
-              :class="[
-                'px-2 py-1 rounded text-xs font-medium',
-                r.type === 'service'
-                  ? 'bg-blue-100 text-blue-800'
-                  : r.type === 'comment'
-                  ? 'bg-amber-100 text-amber-800'
-                  : 'bg-gray-100 text-gray-600'
-              ]"
-            >
-              {{ r.type }}
-            </span>
-          </td>
-
-          <td class="px-6 py-3 text-sm text-gray-700">{{ r.reason }}</td>
-          <td class="px-6 py-3 text-sm text-gray-700">{{ new Date(r.created_at).toLocaleString() }}</td>
-
-          <td class="px-6 py-3">
-            <button
-              @click="confirmDelete(r)"
-              class="px-2 py-1 text-xs rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-              :disabled="deletingId === r.id"
-              title="Delete report"
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
-
-        <tr v-if="!reports?.data?.length">
-          <td colspan="7" class="px-6 py-8 text-center text-gray-500">No reports found.</td>
-        </tr>
-      </tbody>
-    </table>
+          <tr v-if="!reports?.data?.length">
+            <td colspan="5" class="px-6 py-12 text-center text-[#6b5b73] font-body">No reports found.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Pagination -->
-    <div class="p-4 flex flex-wrap gap-2" v-if="reports?.links">
+    <div class="p-4 flex flex-wrap gap-2 bg-white/20 backdrop-blur-sm border-t border-white/30" v-if="reports?.links">
       <Link
         v-for="link in reports.links"
         :key="(link.url || '') + link.label"
         :href="link.url || ''"
         v-html="link.label"
         :class="[
-          'px-3 py-1 rounded border text-sm',
-          link.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white hover:bg-gray-50',
+          'px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all duration-200',
+          link.active ? 'bg-[#e4299c] text-white border-[#e4299c] shadow-lg' : 'bg-white/60 hover:bg-white/80 border-white/60 text-[#6b5b73]',
           !link.url ? 'opacity-50 pointer-events-none' : ''
         ]"
         :preserve-state="true"
