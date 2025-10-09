@@ -129,7 +129,7 @@
       <!-- Desktop Navigation -->
       <nav class="hidden sm:flex items-center gap-8 lg:gap-10 text-lg lg:text-xl text-[#6b5b73] font-heading">
 
-
+        <!-- iii -->
         <Link href="/" class="inline-block hover:text-[#e4299c] hover:scale-110 transition-all duration-200">Home</Link>
         <Link :href="route('about')" class="inline-block hover:text-[#e4299c] hover:scale-110 transition-all duration-200">About</Link>
 
