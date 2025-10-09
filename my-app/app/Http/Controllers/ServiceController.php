@@ -108,49 +108,69 @@ class ServiceController extends Controller
     }
 
     public function providerCancelSlot(Request $request, Service $service)
-    {
-        $user = auth()->user();
-        if (!$user || !$user->provider || (int)$user->provider->id !== (int)$service->provider_id) {
-            abort(403, 'Unauthorized.');
-        }
-
-        $validated = $request->validate([
-            'slot_id' => ['nullable', 'integer', 'min:1'],
-            'date'    => ['nullable', 'date'],
-            'time'    => ['nullable', 'string'], // accept HH:mm (no strict fmt)
-        ]);
-
-        if (!empty($validated['slot_id'])) {
-            // Cancel by ID (bulletproof)
-            $slot = ServiceSlot::where('id', $validated['slot_id'])
-                ->where('service_id', $service->id)
-                ->whereNotNull('reguser_id')
-                ->first();
-        } else {
-            // Cancel by date/time (robust)
-            if (empty($validated['date']) || empty($validated['time'])) {
-                return back()->withErrors(['error' => 'No slot specified.']);
-            }
-            $slot = ServiceSlot::where('service_id', $service->id)
-                ->whereDate('date', $validated['date'])
-                ->whereTime('time', $validated['time']) // ← key change
-                ->whereNotNull('reguser_id')
-                ->first();
-        }
-
-        if (!$slot) {
-            return back()->withErrors(['error' => 'Booked slot not found.']);
-        }
-
-        $prevReguserId = $slot->reguser_id;
-        $slot->reguser_id   = null;
-        $slot->is_available = true;
-        $slot->save();
-
-        // (optional) notify $prevReguserId ...
-
-        return back()->with('success', 'Booking canceled and slot is now available.');
+{
+    $user = auth()->user();
+    if (!$user || !$user->provider || (int)$user->provider->id !== (int)$service->provider_id) {
+        abort(403, 'Unauthorized.');
     }
+
+    $validated = $request->validate([
+        'slot_id' => ['nullable', 'integer', 'min:1'],
+        'date'    => ['nullable', 'date'],
+        'time'    => ['nullable', 'string'], // HH:mm
+    ]);
+
+    // Fetch slot (with client relation for notification)
+    if (!empty($validated['slot_id'])) {
+        $slot = ServiceSlot::with('reguser.user')
+            ->where('id', $validated['slot_id'])
+            ->where('service_id', $service->id)
+            ->whereNotNull('reguser_id')
+            ->first();
+    } else {
+        if (empty($validated['date']) || empty($validated['time'])) {
+            return back()->withErrors(['error' => 'No slot specified.']);
+        }
+        $slot = ServiceSlot::with('reguser.user')
+            ->where('service_id', $service->id)
+            ->whereDate('date', $validated['date'])
+            ->whereTime('time', $validated['time'])
+            ->whereNotNull('reguser_id')
+            ->first();
+    }
+
+    if (!$slot) {
+        return back()->withErrors(['error' => 'Booked slot not found.']);
+    }
+
+    // Capture info BEFORE freeing
+    $clientUserId = optional(optional($slot->reguser)->user)->id; // user who booked
+    $noteDate     = $slot->date instanceof \Carbon\Carbon ? $slot->date->format('Y-m-d') : (string) $slot->date;
+    $noteTime     = $slot->time;
+    $providerName = optional(optional($service->provider)->user)->name ?? 'Provider';
+
+    // Free the slot
+    $slot->reguser_id   = null;
+    $slot->is_available = true;
+    $slot->save();
+
+    // Create a persistent notification for the client (no realtime)
+    if ($clientUserId) {
+        Notification::create([
+            'user_id'       => $clientUserId,
+            'type'          => 'booking_canceled_by_provider',
+            'service_id'    => $service->id,
+            'service_title' => $service->title,
+            'reguser_id'    => null,                 // optional: who receives, not who acted
+            'reguser_name'  => $providerName,        // who canceled
+            'date'          => $noteDate,
+            'time'          => $noteTime,
+        ]);
+    }
+
+    return back()->with('success', 'Booking canceled and slot is now available.');
+}
+
 
 
     public function create()
@@ -283,31 +303,54 @@ class ServiceController extends Controller
 
     // cancels services, make them avilable in database again
     public function cancel(Request $request)
-    {
-        
+{
+    $reguserId = auth()->user()?->reguser?->id;
 
-        $reguserId = auth()->user()?->reguser?->id;
-
-        if (!$reguserId) {
-            return back()->withErrors(['error' => 'Only regusers can cancel services.']);
-        }
-
-        $slot = ServiceSlot::where('service_id', $request->service_id)
-            ->where('date', $request->date)
-            ->where('time', $request->time)
-            ->where('reguser_id', $reguserId)
-            ->first();
-
-        if (!$slot) {
-            return back()->withErrors(['error' => 'Booking not found.']);
-        }
-
-        $slot->reguser_id = null;
-        $slot->is_available = true;
-        $slot->save();
-
-        return back()->with('success', 'Service booking canceled.');
+    if (!$reguserId) {
+        return back()->withErrors(['error' => 'Only regusers can cancel services.']);
     }
+
+    // Load slot WITH service -> provider -> user so we can notify the provider
+    $slot = ServiceSlot::with('service.provider.user')
+        ->where('service_id', $request->service_id)
+        ->where('date', $request->date)
+        ->where('time', $request->time)
+        ->where('reguser_id', $reguserId)
+        ->first();
+
+    if (!$slot) {
+        return back()->withErrors(['error' => 'Booking not found.']);
+    }
+
+    // Capture details BEFORE freeing the slot
+    $providerUserId = optional(optional($slot->service)->provider)->user->id ?? null;
+    $serviceId      = $slot->service_id;
+    $serviceTitle   = $slot->service->title ?? 'Service';
+    $date           = $slot->date instanceof \Carbon\Carbon ? $slot->date->format('Y-m-d') : (string) $slot->date;
+    $time           = $slot->time;
+    $cancelingName  = auth()->user()->name; // the client who cancels
+
+    // Free the slot
+    $slot->reguser_id = null;
+    $slot->is_available = true;
+    $slot->save();
+
+    // Notify the provider (if exists)
+    if ($providerUserId) {
+        Notification::create([
+            'user_id'       => $providerUserId,                 // provider's user id (recipient)
+            'type'          => 'booking_canceled_by_client',    // NEW type
+            'service_id'    => $serviceId,
+            'service_title' => $serviceTitle,
+            'reguser_id'    => $reguserId,                      // who canceled (optional)
+            'reguser_name'  => $cancelingName,                  // who canceled (display)
+            'date'          => $date,
+            'time'          => $time,
+        ]);
+    }
+
+    return back()->with('success', 'Service booking canceled.');
+}
 
     // works service editing on provider side
     public function edit($id)
