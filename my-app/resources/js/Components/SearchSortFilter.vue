@@ -1,37 +1,41 @@
 <template>
-  <div class="flex flex-wrap items-center gap-4 mb-4 relative" ref="root">
-    <!-- Search -->
+  <div class="flex flex-wrap items-center gap-4 mb-8 relative font-heading" ref="root">
+    <!-- Search - Glassmorphic -->
     <input
       :value="search"
       @input="$emit('update:search', $event.target.value)"
       :placeholder="searchPlaceholder"
       type="text"
-      class="px-4 py-2 w-full sm:w-1/3 rounded-full border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm"
+      class="px-6 py-4 w-full sm:flex-1 rounded-2xl backdrop-blur-md bg-white/50 border border-white/60 focus:ring-2 focus:ring-[#e4299c] focus:bg-white/70 focus:outline-none shadow-lg transition-all text-[#2D1810] placeholder-[#6b5b73] font-body"
     />
 
-    <!-- Sort -->
+    <!-- Sort Button -->
     <div class="relative" ref="sortBox" data-sort-container>
       <button
         @click="toggleSortDropdown"
-        class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-300 shadow-sm hover:bg-blue-200 transition"
+        class="flex items-center gap-3 px-6 py-4 rounded-2xl backdrop-blur-md bg-white/50 border border-white/60 shadow-lg hover:bg-white/70 transition-all font-semibold text-[#2D1810]"
         data-sort-toggle
         type="button"
         :aria-expanded="showSortDropdown.toString()"
         aria-haspopup="listbox"
       >
-        &#128218; Sort by: {{ sortOptions[sort] ?? '—' }}
+        Sort: {{ sortOptions[sort] ?? 'Select' }}
+        <svg class="w-4 h-4 transition-transform" :class="showSortDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
       </button>
 
       <div
         v-if="showSortDropdown"
-        class="absolute top-full mt-2 w-48 bg-white border border-gray-200 shadow-lg rounded-lg z-20"
+        class="absolute top-full mt-2 min-w-full backdrop-blur-lg bg-white/90 border border-white/80 shadow-2xl rounded-2xl z-20 overflow-hidden"
         role="listbox"
       >
         <button
           v-for="(label, key) in sortOptions"
           :key="key"
           @click="selectSortOption(key)"
-          class="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+          class="block w-full text-left px-6 py-3 text-sm hover:bg-[#e4299c]/10 transition-colors font-body"
+          :class="sort === key ? 'bg-[#e4299c]/20 text-[#e4299c] font-semibold' : 'text-[#2D1810]'"
           :aria-selected="sort === key"
           type="button"
         >
@@ -40,57 +44,65 @@
       </div>
     </div>
 
-    <!-- Filter -->
-    <div class="relative" ref="filterBox">
-      <button
-        class="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black hover:bg-blue-200 border border-gray-300 shadow-sm transition"
-        @click="toggleFilterDropdown"
-        data-filter-toggle
-        type="button"
-        :aria-expanded="showFilterDropdown.toString()"
-        aria-haspopup="dialog"
-      >
-        <span>&#128317;</span> Filter
-      </button>
+    <!-- Filter Button -->
+<div class="relative" ref="filterBox">
+  <button
+    class="flex items-center gap-3 px-6 py-4 rounded-2xl backdrop-blur-md bg-white/50 border border-white/60 shadow-lg hover:bg-white/70 transition-all font-semibold text-[#2D1810]"
+    @click="toggleFilterDropdown"
+    data-filter-toggle
+    type="button"
+    :aria-expanded="showFilterDropdown.toString()"
+    aria-haspopup="dialog"
+  >
+    Filter
+    <span v-if="selectedFilters.length" class="px-2 py-0.5 rounded-full bg-[#e4299c] text-white text-xs font-bold">
+      {{ selectedFilters.length }}
+    </span>
+    <svg class="w-4 h-4 transition-transform" :class="showFilterDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+    </svg>
+  </button>
 
-      <div
-        v-if="showFilterDropdown"
-        data-filter-container
-        class="absolute top-full mt-2 bg-white border border-gray-200 shadow-lg rounded-lg z-10 w-72 p-3 left-0"
+  <div
+    v-if="showFilterDropdown"
+    data-filter-container
+    class="absolute top-full mt-2 backdrop-blur-lg bg-white/90 border border-white/80 shadow-2xl rounded-2xl z-10 w-80 max-w-[calc(100vw-2rem)] p-5 right-0"
+  >
+    <p class="text-sm font-semibold text-[#2D1810] mb-3">Select Categories:</p>
+    <div v-if="filters.length" class="flex flex-wrap gap-2">
+      <button
+        v-for="label in filters"
+        :key="label"
+        @click="toggleLabel(label)"
+        :class="[
+          'px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200',
+          selectedFilters.includes(label)
+            ? 'bg-gradient-to-r from-[#e4299c] to-[#ff6b9d] text-white shadow-lg'
+            : 'bg-white/60 text-[#6b5b73] hover:bg-white/80 border border-white/60'
+        ]"
+        type="button"
       >
-        <div v-if="filters.length" class="flex flex-wrap gap-2">
-          <button
-            v-for="label in filters"
-            :key="label"
-            @click="toggleLabel(label)"
-            :class="[
-              'px-3 py-1 rounded-full text-sm',
-              selectedFilters.includes(label)
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-            ]"
-            type="button"
-          >
-            {{ label }}
-          </button>
-        </div>
-        <div v-else class="text-sm text-gray-500 px-1 py-0.5">
-          No filters available
-        </div>
-      </div>
+        {{ label }}
+      </button>
     </div>
+    <div v-else class="text-sm text-[#6b5b73] px-1 py-2 font-body">
+      No filters available
+    </div>
+  </div>
+</div>
+
 
     <!-- Selected filter chips -->
-    <div v-if="showSelectedChips && selectedFilters.length" class="flex flex-wrap gap-2 w-full">
+    <div v-if="showSelectedChips && selectedFilters.length" class="flex flex-wrap gap-2 w-full mt-2">
       <span
         v-for="label in selectedFilters"
         :key="label"
-        class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center"
+        class="backdrop-blur-sm bg-[#e4299c]/20 text-[#e4299c] px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 border border-[#e4299c]/30"
       >
         {{ label }}
         <button
           @click="removeLabel(label)"
-          class="ml-2 text-red-600 hover:text-red-800"
+          class="text-[#e4299c] hover:text-[#ff6b9d] font-bold text-lg transition-colors"
           type="button"
           aria-label="Remove filter"
         >
@@ -104,16 +116,6 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 
-/**
- * Props
- * - search: string (v-model:search)
- * - sort: string (v-model:sort) — key from sortOptions
- * - selectedFilters: string[] (v-model:selectedFilters)
- * - sortOptions: Record<string, string> {key -> label}
- * - filters: string[] — available filter options
- * - searchPlaceholder?: string
- * - showSelectedChips?: boolean (default true)
- */
 const props = defineProps({
   search: { type: String, default: '' },
   sort: { type: String, default: '' },
