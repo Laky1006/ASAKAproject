@@ -62,6 +62,10 @@
             :week-start="1"
           />
 
+          <p v-if="flash.success" class="mt-4 text-green-600 text-sm">
+                {{ flash.success }}
+              </p>
+
           <div class="mt-4" v-if="pickedSlot">
             <div class="flex items-center justify-between bg-gray-100 px-4 py-2 rounded">
               <div>
@@ -73,14 +77,16 @@
 
               <button
                 v-if="auth.user && auth.user.role === 'reguser'"
+                :disabled="isBooking"
                 @click="submitSignup(pickedSlot.time, pickedSlot.date)"
-                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-60"
               >
-                Sign Up
+                {{ isBooking ? 'Booking...' : 'Sign Up' }}
               </button>
               <div v-else class="text-base text-black-700 font-bold">
                 LogIn as User to apply
               </div>
+
             </div>
           </div>
 
@@ -157,6 +163,14 @@
         </div>
         <div v-else class="text-sm text-gray-500">No reviews yet.</div>
       </div>
+
+      <!-- PopUp confirmation window -->
+      <PopupConfirm
+      v-model:show="showConfirm"
+      :title="confirmTitle"
+      :message="confirmMessage"
+      @confirm="handleConfirm"
+    />
     </section>
   </MainLayout>
 </template>
@@ -166,6 +180,7 @@ import MainLayout from '@/Layouts/MainLayout.vue'
 import DateTimePicker from '@/Components/DateTimePicker.vue'
 import Review from '@/Components/Review.vue'
 import ReportButton from '@/Components/ReportButton.vue'
+import PopupConfirm from '@/Components/PopupConfirm.vue'
 
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { router, usePage, useForm } from '@inertiajs/vue3'  
@@ -190,8 +205,33 @@ const flash = computed(() => page?.props?.flash ?? {})
 
 // Applicant picker
 const pickedSlot = ref(null)
+const isBooking = ref(false)
+const toast = ref('')
 
-// Scroll-to-highlight (unchanged)
+function showToast(msg) {
+  toast.value = msg
+  setTimeout(() => (toast.value = ''), 4000)
+}
+
+const showConfirm = ref(false)
+const confirmTitle = ref('Please Confirm')
+const confirmMessage = ref('')
+let confirmHandler = null
+
+function askConfirm({ title = 'Please Confirm', message = '', onConfirm }) {
+  confirmTitle.value = title
+  confirmMessage.value = message
+  confirmHandler = typeof onConfirm === 'function' ? onConfirm : null
+  showConfirm.value = true
+}
+
+function handleConfirm() {
+  showConfirm.value = false
+  if (confirmHandler) confirmHandler()
+  confirmHandler = null
+}
+
+// Scroll-to-highlight  
 onMounted(async () => {
   const hash = window.location.hash
   const urlParams = new URLSearchParams(window.location.search)
@@ -208,7 +248,7 @@ onMounted(async () => {
   }
 })
 
-// For calendar slots (unchanged)
+// For calendar slots  
 const normalizedSlots = computed(() =>
   (props.service.slots ?? [])
     .filter(s => s.is_available)
@@ -236,27 +276,48 @@ function submitReview() {
   })
 }
 
-// Booking (unchanged)
+// Booking  
 function submitSignup(time, dateOverride) {
   const date = dateOverride || pickedSlot.value?.date
   const t = time || pickedSlot.value?.time
   if (!date || !t) return
-  if (!confirm(`Do you want to book this slot on ${date} at ${t}?`)) return
 
-  router.post(
-    route('services.book', props.service.id),
-    { date, time: t },
-    { preserveScroll: true }
-  )
+  askConfirm({
+    title: 'Confirm Booking',
+    message: `Do you want to book this slot on ${date} at ${t}?`,
+    onConfirm: () => {
+      isBooking.value = true
+      router.post(
+        route('services.book', props.service.id),
+        { date, time: t },
+        {
+          preserveScroll: true,
+          onSuccess: () => {
+            // 1) hide the Selected box
+            pickedSlot.value = null
+            // 2) get fresh service props (slots) from the server
+            router.reload({ only: ['service'] })
+            // (optional) you can also display a flash via controller redirect()->with('success', 'Booked!')
+            isBooking.value = false
+          },
+        },
+      )
+    }
+  })
 }
 
-// Delete review (unchanged)
+// Delete review  
 function deleteReview(reviewId) {
-  if (!confirm('Are you sure you want to delete this review?')) return
-  router.delete(route('reviews.destroy', reviewId), { preserveScroll: true })
+  askConfirm({
+    title: 'Delete Review',
+    message: 'Are you sure you want to delete this review?',
+    onConfirm: () => {
+      router.delete(route('reviews.destroy', reviewId), { preserveScroll: true })
+    }
+  })
 }
 
-// Sort reviews (unchanged)
+// Sort reviews  
 const sortedReviews = computed(() => {
   if (!props.reviews || !Array.isArray(props.reviews)) return []
   if (props.auth?.user?.role === 'reguser' && props.auth.user.reguser?.id) {
