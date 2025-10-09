@@ -23,7 +23,7 @@ const form = useForm({
     username: user.username,
     profile_photo: null,
     grade: user.reguser?.grade || '',
-    education: user.provider?.education || '',
+    location: user.provider?.location || '',
     bio: user.provider?.bio || '',
 });
 
@@ -144,28 +144,16 @@ function submitForm() {
                 </div>
             </div>
 
-            <!-- For regusers -->
-            <!-- <div v-if="user.role === 'reguser'">
-            <InputLabel for="grade" value="Grade" />
-            <TextInput
-                id="grade"
-                type="text"
-                v-model="form.grade"
-                class="mt-1 block w-full"
-            />
-            <InputError class="mt-2" :message="form.errors.grade" />
-            </div> -->
-
             <!-- For providers -->
             <div v-if="user.role === 'provider'">
-            <InputLabel for="education" value="Education" />
+            <InputLabel for="location" value="Location" />
             <TextInput
-                id="education"
+                id="location"
                 type="text"
-                v-model="form.education"
+                v-model="form.location"
                 class="mt-1 block w-full"
             />
-            <InputError class="mt-2" :message="form.errors.education" />
+            <InputError class="mt-2" :message="form.errors.location" />
 
             <InputLabel for="bio" value="Bio" class="mt-4" />
             <textarea
