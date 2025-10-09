@@ -3,12 +3,12 @@
     <section class="max-w-4xl mx-auto py-10 px-6">
       <h1 class="text-2xl font-bold mb-6">My Booked Services</h1>
 
-      <div v-if="services.length">
+      <div v-if="items.length">
         <transition-group name="fade" tag="ul" class="space-y-4">
           <li
-            v-for="service in services"
-            :key="service.id + service.date + service.time"
-            v-show="!cancelingServiceIds.includes(service.id + service.date + service.time)"
+            v-for="service in items"
+            :key="compositeId(service)"
+            v-show="!cancelingIds.includes(compositeId(service))"
             class="border border-gray-200 rounded p-4 bg-white shadow-sm flex items-center justify-between gap-4"
           >
             <!-- Left: Banner + Info -->
@@ -34,7 +34,7 @@
             <!-- Right: Cancel Button -->
             <div>
               <button
-                @click="cancelBooking(service)"
+                @click="requestCancel(service)"
                 class="bg-red-600 text-white px-5 py-2 text-base rounded hover:bg-red-700 transition"
               >
                 Cancel
@@ -48,59 +48,92 @@
         You haven't booked any services yet.
       </div>
     </section>
+
+    <!-- Reusable confirm modal -->
+    <PopupConfirm
+      v-model:show="showConfirm"
+      :title="confirmTitle"
+      :message="confirmMessage"
+      @confirm="handleConfirm"
+    />
   </MainLayout>
 </template>
 
-<script>
-import MainLayout from '@/Layouts/MainLayout.vue';
+<script setup>
+import { ref } from 'vue'
+import { router } from '@inertiajs/vue3'
+import MainLayout from '@/Layouts/MainLayout.vue'
+import PopupConfirm from '@/Components/PopupConfirm.vue'
 
-export default {
-  props: {
-    auth: Object,
-    services: Array,
-  },
-  components: {
-    MainLayout,
-  },
-  data() {
-    return {
-      cancelingServiceIds: [],
-    };
-  },
-  methods: {
-    cancelBooking(service) {
-      const confirmed = confirm(
-        `Are you sure you want to cancel your booking for "${service.title}" on ${service.date} at ${service.time}?`
-      );
+const props = defineProps({
+  auth: Object,
+  services: Array,
+})
 
-      if (!confirmed) return;
+// Local, mutable copy of services for UI updates
+const items = ref([...(props.services ?? [])])
 
-      this.cancelingServiceIds.push(service.id + service.date + service.time);
+// Helpers
+const compositeId = (s) => `${s.id}|${s.date}|${s.time}`
 
-      this.$inertia.post(
-        route('services.cancel'),
-        {
-          service_id: service.id,
-          date: service.date,
-          time: service.time,
-        },
-        {
-          preserveScroll: true,
-          onSuccess: () => {
-            setTimeout(() => {
-              this.services = this.services.filter(
-                l => l.id + l.date + l.time !== service.id + service.date + service.time
-              );
-              this.cancelingServiceIds = this.cancelingServiceIds.filter(
-                id => id !== service.id + service.date + service.time
-              );
-            }, 300);
-          },
-        }
-      );
+// UI state
+const cancelingIds = ref([])
+
+// Confirm modal state
+const showConfirm = ref(false)
+const confirmTitle = ref('')
+const confirmMessage = ref('')
+let confirmHandler = null
+
+function askConfirm({ title = 'Please Confirm', message = '', onConfirm }) {
+  confirmTitle.value = title
+  confirmMessage.value = message
+  confirmHandler = typeof onConfirm === 'function' ? onConfirm : null
+  showConfirm.value = true
+}
+
+function handleConfirm() {
+  showConfirm.value = false
+  if (confirmHandler) confirmHandler()
+  confirmHandler = null
+}
+
+// Cancel flow
+function requestCancel(service) {
+  askConfirm({
+    title: 'Cancel Booking',
+    message: `Are you sure you want to cancel your booking for "${service.title}" on ${service.date} at ${service.time}?`,
+    onConfirm: () => performCancel(service),
+  })
+}
+
+function performCancel(service) {
+  const id = compositeId(service)
+  if (!cancelingIds.value.includes(id)) cancelingIds.value.push(id)
+
+  router.post(
+    route('services.cancel'),
+    {
+      service_id: service.id,
+      date: service.date,
+      time: service.time,
     },
-  },
-};
+    {
+      preserveScroll: true,
+      onSuccess: () => {
+        // Remove from list with a slight delay to allow fade transition
+        setTimeout(() => {
+          items.value = items.value.filter((l) => compositeId(l) !== id)
+          cancelingIds.value = cancelingIds.value.filter((x) => x !== id)
+        }, 300)
+      },
+      onError: () => {
+        // Undo canceling flag if server failed
+        cancelingIds.value = cancelingIds.value.filter((x) => x !== id)
+      },
+    }
+  )
+}
 </script>
 
 <style scoped>

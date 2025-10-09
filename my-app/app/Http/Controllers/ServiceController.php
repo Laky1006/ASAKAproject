@@ -306,7 +306,7 @@ class ServiceController extends Controller
         $service = Service::findOrFail($id);
         $user = auth()->user();
     
-        // ✅ Ensure only the owner provider can delete
+        // Ensure only the owner provider can delete
         if ($user->role !== 'provider' || $user->provider->id !== $service->provider_id) {
             abort(403, 'Unauthorized action.');
         }
