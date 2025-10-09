@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Reguser extends Model
 {
     //
-    protected $fillable = ['user_id', 'grade'];
+    protected $fillable = ['user_id'];
 
     public function user()
     {

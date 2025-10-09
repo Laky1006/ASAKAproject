@@ -157,7 +157,8 @@
             class="absolute right-0 mt-2 w-44 bg-white text-[#6b5b73] shadow-xl rounded-lg overflow-hidden z-50 border border-[#e8e5e2] font-body font-normal"
           >
             <Link :href="route('profile.edit')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">Profile</Link>
-            <Link v-if="user.role !== 'admin'" :href="route('my-services')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">My Services</Link>
+            <Link v-if="user.role === 'provider'" :href="route('my-services')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">My Services</Link>
+            <Link v-if="user.role === 'reguser'" :href="route('my-services')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">My Bookings</Link>
             <Link v-if="user.role === 'admin'" :href="route('admin-panel.dashboard')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">Admin Panel</Link>
             <Link :href="route('notifications.index')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">Notifications</Link>
 
