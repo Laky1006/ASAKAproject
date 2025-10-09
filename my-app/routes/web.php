@@ -70,6 +70,17 @@ Route::middleware('auth')->group(function () {
     // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
+    // provider preview 
+    Route::get('/provider/services/{service}/preview',
+        [App\Http\Controllers\ServiceController::class, 'providerPreview']
+    )->name('services.provider.preview'); 
+
+    Route::post(
+        '/provider/services/{service}/slots/cancel',
+        [App\Http\Controllers\ServiceController::class, 'providerCancelSlot']
+    )->name('services.provider.cancel');
+
+
     // My services (provider/reguser split)
     Route::get('/my-services', function () {
         $user = Auth::user();

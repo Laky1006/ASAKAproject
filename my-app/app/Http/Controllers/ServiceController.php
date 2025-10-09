@@ -7,10 +7,57 @@ use App\Models\Service;
 use Inertia\Inertia;
 use App\Models\ServiceSlot;
 use App\Models\Notification;
+use App\Models\Reguser;
+
 
 
 class ServiceController extends Controller
 {
+
+    // ---- presenters (reuse in show & providerPreview)
+    private function presentService(Service $service, bool $forProviderPreview = false): array
+    {
+        return [
+            'id' => $service->id,
+            'title' => $service->title,
+            'description' => $service->description,
+            'phone' => $service->phone,
+            'rating' => $service->rating,
+            'banner' => $service->banner,
+            'price' => $service->price,
+
+            // IMPORTANT: include booked user info only in provider preview
+            'slots' => $service->slots->map(function ($slot) use ($forProviderPreview) {
+                return [
+                    'date'         => $slot->date->format('Y-m-d'),
+                    'time'         => $slot->time,
+                    'is_available' => $slot->is_available,
+                    'reguser_id'   => $forProviderPreview ? $slot->reguser_id : null,
+                    'reguser_name' => $forProviderPreview
+                        ? optional(optional($slot->reguser)->user)->name
+                        : null,
+                ];
+            }),
+        ];
+    }
+
+    private function presentReviews($reviews): array
+    {
+        return $reviews->map(function ($review) {
+            return [
+                'id'         => $review->id,
+                'rating'     => $review->rating,
+                'comment'    => $review->comment,
+                'created_at' => $review->created_at->diffForHumans(),
+                'reguser_id' => $review->reguser_id,
+                'reguser'    => [
+                    'name'   => $review->reguser->user->name ?? 'Unknown',
+                    'avatar' => $review->reguser->user->avatar ?? null,
+                ],
+            ];
+        })->toArray();
+    }
+
     public function index()
     {
         //$services = Service::all();
@@ -24,42 +71,78 @@ class ServiceController extends Controller
     // Gets all the needed things to show on show.vue
     public function show($id)
     {
-        
         $service = Service::with(['slots', 'reviews.reguser.user'])->findOrFail($id);
 
         return Inertia::render('Services/Show', [
-            'service' => [
-                'id' => $service->id,
-                'title' => $service->title,
-                'description' => $service->description,
-                'phone' => $service->phone,
-                'rating' => $service->rating,
-                'banner' => $service->banner,
-                'price' => $service->price,
-                'slots' => $service->slots->map(function ($slot) {
-                    return [
-                        'date' => $slot->date->format('Y-m-d'), 
-                        'time' => $slot->time,
-                        'is_available' => $slot->is_available,
-                    ];
-                }),
-            ],
-
-            'reviews' => $service->reviews->map(function ($review) {
-                return [
-                    'id' => $review->id,
-                    'rating' => $review->rating,
-                    'comment' => $review->comment,
-                    'created_at' => $review->created_at->diffForHumans(),
-                    'reguser_id' => $review->reguser_id, 
-                    'reguser' => [
-                        'name' => $review->reguser->user->name ?? 'Unknown',
-                        'avatar' => $review->reguser->user->avatar ?? null,
-                    ],
-                ];
-            }),
+            'service' => $this->presentService($service),
+            'reviews' => $this->presentReviews($service->reviews),
+            'mode'    => 'public', // <— tell the view this is the public mode
         ]);
     }
+
+    // Provider preview (reuses Services/Show.vue, but in provider mode)
+    public function providerPreview(Service $service)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->provider || (int)$user->provider->id !== (int)$service->provider_id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        // load booked user for each slot
+        $service->load(['slots.reguser.user', 'reviews.reguser.user']);
+
+        return Inertia::render('Services/Show', [
+            'service' => $this->presentService($service, true),   // include reguser_name
+            'reviews' => $this->presentReviews($service->reviews),
+            'mode'    => 'provider',
+        ]);
+    }
+
+    public function providerCancelSlot(Request $request, Service $service)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->provider || (int)$user->provider->id !== (int)$service->provider_id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        $validated = $request->validate([
+            'slot_id' => ['nullable', 'integer', 'min:1'],
+            'date'    => ['nullable', 'date'],
+            'time'    => ['nullable', 'string'], // accept HH:mm (no strict fmt)
+        ]);
+
+        if (!empty($validated['slot_id'])) {
+            // Cancel by ID (bulletproof)
+            $slot = ServiceSlot::where('id', $validated['slot_id'])
+                ->where('service_id', $service->id)
+                ->whereNotNull('reguser_id')
+                ->first();
+        } else {
+            // Cancel by date/time (robust)
+            if (empty($validated['date']) || empty($validated['time'])) {
+                return back()->withErrors(['error' => 'No slot specified.']);
+            }
+            $slot = ServiceSlot::where('service_id', $service->id)
+                ->whereDate('date', $validated['date'])
+                ->whereTime('time', $validated['time']) // ← key change
+                ->whereNotNull('reguser_id')
+                ->first();
+        }
+
+        if (!$slot) {
+            return back()->withErrors(['error' => 'Booked slot not found.']);
+        }
+
+        $prevReguserId = $slot->reguser_id;
+        $slot->reguser_id   = null;
+        $slot->is_available = true;
+        $slot->save();
+
+        // (optional) notify $prevReguserId ...
+
+        return back()->with('success', 'Booking canceled and slot is now available.');
+    }
+
 
     public function create()
     {

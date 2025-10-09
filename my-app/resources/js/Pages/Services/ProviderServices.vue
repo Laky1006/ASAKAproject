@@ -16,49 +16,42 @@
       <div v-if="services.length">
         <ul class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <li
-            v-for="service in services"
-            :key="service.id"
-            class="bg-white rounded-lg shadow hover:shadow-md transition overflow-hidden"
-          >
-            <!-- Banner -->
-            <img
-              :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
-              alt="Service banner"
-              class="w-full h-40 object-cover"
-            />
+  v-for="service in services"
+  :key="service.id"
+  class="bg-white rounded-lg shadow hover:shadow-md transition overflow-hidden"
+>
+  <Link :href="route('services.provider.preview', service.id)" class="block">
+    <img
+      :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
+      alt="Service banner"
+      class="w-full h-40 object-cover"
+    />
+    <div class="p-4">
+      <h2 class="text-xl font-semibold mb-1">{{ service.title }}</h2>
+      <p class="text-sm text-gray-600 mb-2">
+        {{ service.description.length > 20 ? service.description.slice(0, 50) + '...' : service.description }}
+      </p>
+      <div class="flex items-center gap-2 mb-4">
+        <div class="flex text-yellow-500 text-lg">
+          <span v-for="n in 5" :key="n" :class="service.rating >= n ? 'text-yellow-500' : 'text-gray-300'">★</span>
+        </div>
+        <span class="text-gray-600 text-sm">
+          {{ service.rating ? `${service.rating}/5` : 'Not Rated' }}
+        </span>
+      </div>
+    </div>
+  </Link>
 
-            <!-- Content -->
-            <div class="p-4">
-              <h2 class="text-xl font-semibold mb-1">{{ service.title }}</h2>
-              <p class="text-sm text-gray-600 mb-2">
-                {{ service.description.length > 20 ? service.description.slice(0, 50) + '...' : service.description }}
-              </p>
-
-              <!-- Star Rating -->
-              <div class="flex items-center gap-2 mb-4">
-                <div class="flex text-yellow-500 text-lg">
-                  <span
-                    v-for="n in 5"
-                    :key="n"
-                    :class="service.rating >= n ? 'text-yellow-500' : 'text-gray-300'"
-                  >
-                    ★
-                  </span>
-                </div>
-                <span class="text-gray-600 text-sm">
-                  {{ service.rating ? `${service.rating}/5` : 'Not Rated' }}
-                </span>
-              </div>
-
-              <!-- Edit Button -->
-              <Link
-                :href="route('services.edit', service.id)"
-                class="inline-block bg-gray-800 text-white text-sm px-4 py-2 rounded hover:bg-gray-900"
-              >
-                Edit
-              </Link>
-            </div>
-          </li>
+  <!-- Keep a direct Edit button if you like -->
+  <div class="px-4 pb-4">
+    <Link
+      :href="route('services.edit', service.id)"
+      class="inline-block bg-gray-800 text-white text-sm px-4 py-2 rounded hover:bg-gray-900"
+    >
+      Edit
+    </Link>
+  </div>
+</li>
         </ul>
       </div>
 
