@@ -7,18 +7,28 @@ use App\Models\Service;
 use Inertia\Inertia;
 use App\Models\ServiceSlot;
 use App\Models\Notification;
-
+use App\Models\Provider;   
+use Illuminate\Support\Facades\Auth;
 
 class ServiceController extends Controller
 {
-    public function index()
+    
+    public function index(Request $request) 
     {
         //$services = Service::all();
         $services = Service::with('provider.user')->get(); // eager load provider + user
 
-        return Inertia::render('Home', [
-            'services' => $services,
-        ]);
+        $providers = Provider::with([
+        'user:id,name',
+        'services:id,provider_id,title,price,rating,banner',
+    ])->get();
+
+    return Inertia::render('Home', [
+        'services'  => $services,
+        'providers' => $providers,   // new
+        'auth'      => ['user' => Auth::user()],
+          'initialTab' => $request->query('tab', 'services'), // NEW
+    ]);
     }
 
     // Gets all the needed things to show on show.vue

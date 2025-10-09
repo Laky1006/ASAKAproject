@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Admin\AdminPanelController;
-
+use App\Http\Controllers\ProviderController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
@@ -42,7 +42,9 @@ Route::middleware(['auth','verified'])->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 });
 
-Route::get('/', [ServiceController::class, 'index']);
+// Route::get('/', [ServiceController::class, 'index']);
+Route::get('/', [\App\Http\Controllers\ServiceController::class, 'index'])->name('home');
+
 
 Route::get('/dashboard', fn () => Inertia::render('Dashboard'))
     ->middleware(['auth', 'verified'])
@@ -141,6 +143,15 @@ Route::get('/secret', function () {
 Route::get('/tests', function () {
     return Inertia::render('Test'); // points to resources/js/Pages/Test.vue
 });
+
+
+// Providers
+
+
+Route::get('/providers', [ProviderController::class, 'index'])->name('providers.index');
+Route::get('/providers/{id}', [ProviderController::class, 'show'])->name('providers.show');
+
+
 
 require __DIR__ . '/auth.php';
 
