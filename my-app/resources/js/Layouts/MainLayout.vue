@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-svh bg-[#FFF8F0]">
+  <div class="flex flex-col min-h-svh bg-[#FFF8F0] font-body">
 
     <!-- Mobile Sidebar Overlay -->
     <div 
@@ -32,7 +32,7 @@
         </button>
       </div>
 
-      <div class="px-6 py-4 space-y-2 font-baron">
+      <div class="px-6 py-4 space-y-2 font-heading">
         <Link href="/" @click="showMobileMenu = false"
           class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
           Home
@@ -74,7 +74,6 @@
             Admin Panel
           </Link>
 
-
           <Link :href="route('notifications.index')" @click="showMobileMenu = false"
             class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
             Notifications
@@ -98,8 +97,15 @@
       </div>
     </nav>
 
-    <!-- HEADER -->
-    <header class="sticky top-0 z-50 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center bg-white shadow-sm border-b border-[#e8e5e2]">
+    <!-- HEADER with scroll effect -->
+    <header 
+      :class="[
+        'sticky top-0 z-50 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center transition-all duration-100',
+        isScrolled 
+          ? 'bg-white shadow-sm border-b border-[#e8e5e2]' 
+          : 'bg-transparent'
+      ]"
+    >
 
       <!-- Logo -->
       <div class="flex items-center gap-4">
@@ -121,9 +127,11 @@
       </button>
 
       <!-- Desktop Navigation -->
-      <nav class="hidden sm:flex items-center gap-8 lg:gap-10 text-base lg:text-lg text-[#6b5b73] font-baron">
-        <Link href="/" class="hover:text-[#e4299c] transition-colors duration-200">Home</Link>
-        <Link :href="route('about')" class="hover:text-[#e4299c] transition-colors duration-200">About</Link>
+      <nav class="hidden sm:flex items-center gap-8 lg:gap-10 text-lg lg:text-xl text-[#6b5b73] font-heading">
+
+
+        <Link href="/" class="inline-block hover:text-[#e4299c] hover:scale-110 transition-all duration-200">Home</Link>
+        <Link :href="route('about')" class="inline-block hover:text-[#e4299c] hover:scale-110 transition-all duration-200">About</Link>
 
         <div v-if="user" class="relative" ref="dropdown">
           <button 
@@ -146,7 +154,7 @@
 
           <!-- Desktop Dropdown Menu -->
           <div v-if="showMenu"
-            class="absolute right-0 mt-2 w-44 bg-white text-[#6b5b73] shadow-xl rounded-lg overflow-hidden z-50 border border-[#e8e5e2]"
+            class="absolute right-0 mt-2 w-44 bg-white text-[#6b5b73] shadow-xl rounded-lg overflow-hidden z-50 border border-[#e8e5e2] font-body font-normal"
           >
             <Link :href="route('profile.edit')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">Profile</Link>
             <Link v-if="user.role !== 'admin'" :href="route('my-services')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">My Services</Link>
@@ -156,27 +164,26 @@
             <form @submit.prevent="logout" class="border-t border-[#febd59]">
               <button type="submit" class="w-full text-left px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c]">Log Out</button>
             </form>
-
           </div>
         </div>
 
         <!-- Desktop Login -->
         <div v-else>
-          <Link href="/login" class="hover:text-[#e4299c] transition-colors duration-200">Log In</Link>
+          <Link href="/login" class="inline-block hover:text-[#e4299c] hover:scale-110 transition-all duration-200">Log In</Link>
         </div>
       </nav>
     </header>
 
-    <!-- Page Content (made on the main page) -->
+    <!-- Page Content -->
     <main class="grow">
       <slot />
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white text-[#6b5b73] text-center py-8 mt-8 border-t border-[#e8e5e2] font-baron">
+    <footer class="bg-white text-[#6b5b73] text-center py-8 mt-8 border-t border-[#e8e5e2] font-heading">
       <div class="max-w-6xl mx-auto px-4">
-        <p class="font-medium text-sm sm:text-base">© 2025 BeauHive. All rights reserved.</p>
-        <div class="mt-3 flex flex-col sm:flex-row justify-center gap-4 sm:gap-8 text-xs sm:text-sm">
+        <p class="font-semibold text-sm sm:text-base">© 2025 BeauHive. All rights reserved.</p>
+        <div class="mt-3 flex flex-col sm:flex-row justify-center gap-4 sm:gap-8 text-xs sm:text-sm font-body">
           <a href="/privacy" class="hover:text-[#e4299c] transition-colors">Privacy Policy</a>
           <a href="/terms" class="hover:text-[#e4299c] transition-colors">Terms of Service</a>
           <a href="/contact" class="hover:text-[#e4299c] transition-colors">Contact</a>
@@ -194,6 +201,7 @@ defineProps({ user: Object })
 // state
 const showMenu = ref(false)
 const showMobileMenu = ref(false)
+const isScrolled = ref(false)
 
 // refs
 const dropdown = ref(null)
@@ -207,10 +215,14 @@ const closeMenus = () => {
 const toggleMenu = () => { showMenu.value = !showMenu.value }
 
 const logout = () => {
-  // fallback if Ziggy breaks down
   const hasRoute = typeof route === 'function'
   router.post(hasRoute ? route('logout') : '/logout')
   showMobileMenu.value = false
+}
+
+// scroll handler
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 10
 }
 
 // listeners
@@ -227,11 +239,12 @@ const handleEscapeKey = (event) => {
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleEscapeKey)
+  window.addEventListener('scroll', handleScroll)
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('keydown', handleEscapeKey)
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
-

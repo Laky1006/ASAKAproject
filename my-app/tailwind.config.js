@@ -13,6 +13,8 @@ export default {
         extend: {
             fontFamily: {
                 baron: ['BaronNeueBold', ...defaultTheme.fontFamily.sans],
+                heading: ['Manrope', ...defaultTheme.fontFamily.sans],
+                body: ['Inter', ...defaultTheme.fontFamily.sans],
             },
         },
     },
