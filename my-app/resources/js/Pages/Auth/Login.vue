@@ -69,7 +69,7 @@ const submit = () => {
                 autocomplete="current-password"
             />
 
-            <!-- Eye toggle button -->
+            
             <button
                 type="button"
                 @click="togglePassword"
