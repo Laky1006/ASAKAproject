@@ -14,6 +14,16 @@
             "<em>{{ note.service_title }}</em>" on {{ note.date }} at {{ note.time }}.
           </div>
 
+          <div v-else-if="note.type === 'booking_canceled_by_provider'">
+            ❗ <strong>{{ note.reguser_name }}</strong> canceled your booking for
+            "<em>{{ note.service_title }}</em>" on {{ note.date }} at {{ note.time }}.
+          </div>
+
+          <div v-else-if="note.type === 'booking_canceled_by_client'">
+            ⚠️ <strong>{{ note.reguser_name }}</strong> canceled their booking for
+            "<em>{{ note.service_title }}</em>" on {{ note.date }} at {{ note.time }}.
+          </div>
+
           <div v-else-if="note.type === 'review_left'">
             💬 <strong>{{ note.reguser_name }}</strong> left a review on
             "<em>{{ note.service_title }}</em>".
