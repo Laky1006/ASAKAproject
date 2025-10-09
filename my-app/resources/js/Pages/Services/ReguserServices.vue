@@ -11,8 +11,11 @@
             v-show="!cancelingIds.includes(compositeId(service))"
             class="border border-gray-200 rounded p-4 bg-white shadow-sm flex items-center justify-between gap-4"
           >
-            <!-- Left: Banner + Info -->
-            <div class="flex items-center gap-4">
+            <!-- Left: Clickable area goes to show page -->
+            <Link
+              :href="route('services.show', service.id)"
+              class="flex items-center gap-4 flex-1 cursor-pointer hover:bg-gray-50 rounded-md transition p-1 -m-1"
+            >
               <img
                 :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
                 alt="Service banner"
@@ -29,12 +32,12 @@
                   📅 {{ service.date }} &nbsp;&nbsp; 🕒 {{ service.time }}
                 </div>
               </div>
-            </div>
+            </Link>
 
-            <!-- Right: Cancel Button -->
+            <!-- Right: Cancel Button (stops navigation) -->
             <div>
               <button
-                @click="requestCancel(service)"
+                @click.stop="requestCancel(service)"
                 class="bg-red-600 text-white px-5 py-2 text-base rounded hover:bg-red-700 transition"
               >
                 Cancel
@@ -61,7 +64,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { router, Link } from '@inertiajs/vue3' 
 import MainLayout from '@/Layouts/MainLayout.vue'
 import PopupConfirm from '@/Components/PopupConfirm.vue'
 
