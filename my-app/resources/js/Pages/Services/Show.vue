@@ -53,39 +53,37 @@
           </div>
 
           <!-- Date Picker -->
-          <div>
-            <h2 class="text-lg font-semibold mb-2">&#128197; Pick a Lesson Date</h2>
-            <Datepicker
-              v-model="selectedDate"
-              :inline="true"
-              :highlight="highlightedDates"
-            />
-          </div>
+          <!-- Applicant slot picker -->
+          <h2 class="text-lg font-semibold mb-2">&#128197; Pick a date</h2>
+          <DateTimePicker
+            variant="applicant"
+            :slots="normalizedSlots"
+            v-model="pickedSlot"
+            :week-start="1"
+          />
 
-          <!-- Available Time Slots -->
-          <div v-if="selectedSlots.length" class="mt-4">
-            <h3 class="font-semibold mb-2">Times on {{ formattedSelectedDate }}</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div
-                v-for="(time, idx) in selectedSlots"
-                :key="idx"
-                class="bg-gray-100 px-4 py-2 rounded flex justify-between items-center space-x-4"
-              >
-                <span>&#128338; {{ time }}</span>
-                <button
-                  v-if="auth.user && auth.user.role === 'reguser'"
-                  @click="submitSignup(time)"
-                  class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm"
-                >
-                  Sign Up
-                </button>
-                <div v-else class="text-base text-black-700 font-bold">
-                  Log in as reguser to apply
+          <div class="mt-4" v-if="pickedSlot">
+            <div class="flex items-center justify-between bg-gray-100 px-4 py-2 rounded">
+              <div>
+                <div class="font-medium">Selected</div>
+                <div class="text-sm text-gray-700">
+                  {{ pickedSlot.date }} at {{ pickedSlot.time }}
                 </div>
+              </div>
+
+              <button
+                v-if="auth.user && auth.user.role === 'reguser'"
+                @click="submitSignup(pickedSlot.time, pickedSlot.date)"
+                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Sign Up
+              </button>
+              <div v-else class="text-base text-black-700 font-bold">
+                LogIn as User to apply
               </div>
             </div>
           </div>
-          <div v-else class="text-sm text-gray-500">No available times on this date.</div>
+
         </div>
       </div>
 
@@ -105,28 +103,42 @@
               @click="form.rating = n"
             >★</span>
           </div>
+          <p v-if="form.errors.rating" class="text-red-600 text-sm -mt-1 mb-2">
+            {{ form.errors.rating }}
+          </p>
 
           <textarea
             v-model="form.comment"
             rows="3"
             class="w-full border rounded px-3 py-2"
+            :class="form.errors.comment ? 'border-red-500' : 'border-gray-300'"
+            :aria-invalid="!!form.errors.comment"
             placeholder="Write a comment (optional)"
           ></textarea>
 
-          <div v-if="alreadyReviewed" class="text-red-500 text-sm mt-2">
-            You have already left a review here.
+          <p v-if="form.errors.comment" class="text-red-600 text-sm mt-1">
+            {{ form.errors.comment }}
+          </p>
+
+          <div v-if="form.errors.review" class="text-red-500 text-sm mt-2">
+            {{ form.errors.review }}
           </div>
 
           <button
             @click="submitReview"
+            :disabled="form.processing"
             class="mt-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 text-sm"
           >
-            Post Review
+            {{ form.processing ? 'Posting...' : 'Post Review' }}
           </button>
+
+          <p v-if="flash.success" class="text-green-600 text-sm mt-2">
+            {{ flash.success }}
+          </p>
         </div>
 
         <div v-else class="text-gray-500 italic mb-6">
-          You must be signed in as a reguser to leave a review.
+          You must be a registered user to leave a review.
         </div>
 
         <div v-if="reviews.length">
@@ -151,110 +163,100 @@
 
 <script setup>
 import MainLayout from '@/Layouts/MainLayout.vue'
-import Datepicker from '@vuepic/vue-datepicker'
-import '@vuepic/vue-datepicker/dist/main.css'
+import DateTimePicker from '@/Components/DateTimePicker.vue'
 import Review from '@/Components/Review.vue'
 import ReportButton from '@/Components/ReportButton.vue'
 
 import { ref, computed, onMounted, nextTick } from 'vue'
-import { router, usePage } from '@inertiajs/vue3'
+import { router, usePage, useForm } from '@inertiajs/vue3'  
 
+// Props
 const props = defineProps({
   auth: Object,
   service: Object,
   reviews: Array,
 })
 
-const selectedDate = ref(null)
-
-const form = ref({
+// --- useForm replaces your manual ref + error handling
+const form = useForm({
+  service_id: props.service.id,
   rating: 0,
   comment: '',
 })
 
-const submitting = ref(false)
+// Keep if you use flash messages elsewhere
+const page  = usePage()
+const flash = computed(() => page?.props?.flash ?? {})
 
-const page = usePage()
+// Applicant picker
+const pickedSlot = ref(null)
 
-
+// Scroll-to-highlight (unchanged)
 onMounted(async () => {
   const hash = window.location.hash
   const urlParams = new URLSearchParams(window.location.search)
   const reviewId = hash.startsWith('#review-') ? hash.replace('#review-', '') : urlParams.get('review')
 
   if (reviewId) {
-    await nextTick() // wait until DOM is ready
+    await nextTick()
     const el = document.getElementById(`review-${reviewId}`)
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' })
       el.classList.add('ring-2', 'ring-blue-400', 'rounded-lg')
-      // Optional: remove highlight after a moment
       setTimeout(() => el.classList.remove('ring-2', 'ring-blue-400'), 2000)
     }
   }
 })
 
-const alreadyReviewed = computed(() =>
-  page?.props?.errors?.[0]?.includes?.('already reviewed') ?? false
+// For calendar slots (unchanged)
+const normalizedSlots = computed(() =>
+  (props.service.slots ?? [])
+    .filter(s => s.is_available)
+    .map(s => ({ date: s.date, time: s.time }))
 )
 
-const submitReview = () => {
-  if (!form.value.rating && !form.value.comment.trim()) return
+// --- useForm submit
+function submitReview() {
+  // Optional client-side guard (keeps behavior you had)
+  if (!form.rating && !form.comment.trim()) return
 
-  submitting.value = true
-  router.post(
-    route('reviews.store'),
-    {
+  form.post(route('reviews.store'), {
+    preserveScroll: true,
+    data: {
       service_id: props.service.id,
-      rating: form.value.rating,
-      comment: form.value.comment,
+      rating: form.rating,
+      comment: form.comment,
     },
-    {
-      preserveScroll: true,
-      onFinish: () => {
-        form.value.comment = ''
-        form.value.rating = 0
-        submitting.value = false
-      },
-    }
+    onSuccess: () => {
+      // Reset after success
+      form.reset('comment', 'rating')
+    },
+    // onError: () => { // errors in form.errors.* automatically
+    // },
+  })
+}
+
+// Booking (unchanged)
+function submitSignup(time, dateOverride) {
+  const date = dateOverride || pickedSlot.value?.date
+  const t = time || pickedSlot.value?.time
+  if (!date || !t) return
+  if (!confirm(`Do you want to book this slot on ${date} at ${t}?`)) return
+
+  router.post(
+    route('services.book', props.service.id),
+    { date, time: t },
+    { preserveScroll: true }
   )
 }
 
-/* ----- slots / calendar helpers ----- */
-const slotMap = computed(() => {
-  const map = {}
-  const slots = props.service.slots?.filter(s => s.is_available)
-  if (Array.isArray(slots)) {
-    slots.forEach(slot => {
-      if (!map[slot.date]) map[slot.date] = []
-      map[slot.date].push(slot.time)
-    })
-  }
-  return map
-})
+// Delete review (unchanged)
+function deleteReview(reviewId) {
+  if (!confirm('Are you sure you want to delete this review?')) return
+  router.delete(route('reviews.destroy', reviewId), { preserveScroll: true })
+}
 
-const highlightedDates = computed(() =>
-  Object.keys(slotMap.value)
-    .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d))
-    .map(d => {
-      const [y, m, day] = d.split('-').map(Number)
-      return new Date(y, m - 1, day)
-    })
-)
-
-const selectedSlots = computed(() => {
-  if (!selectedDate.value) return []
-  const d = new Date(selectedDate.value)
-  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-  return slotMap.value[key] || []
-})
-
-const formattedSelectedDate = computed(() => {
-  if (!selectedDate.value) return ''
-  return new Date(selectedDate.value).toLocaleDateString()
-})
-
-/* ----- reviews list ordering ----- */
+// Sort reviews (unchanged)
 const sortedReviews = computed(() => {
   if (!props.reviews || !Array.isArray(props.reviews)) return []
   if (props.auth?.user?.role === 'reguser' && props.auth.user.reguser?.id) {
@@ -265,31 +267,4 @@ const sortedReviews = computed(() => {
   }
   return props.reviews
 })
-
-/* ----- actions ----- */
-const submitSignup = (time) => {
-  const d = new Date(selectedDate.value)
-  const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-
-  if (!confirm(`Do you want to book this slot on ${key} at ${time}?`)) return
-
-  router.post(
-    route('services.book', props.service.id),
-    { date: key, time },
-    { preserveScroll: true }
-  )
-}
-
-const deleteReview = (reviewId) => {
-  if (!confirm('Are you sure you want to delete this review?')) return
-  router.delete(route('reviews.destroy', reviewId), {
-    preserveScroll: true,
-  })
-}
 </script>
-
-<style>
-.dp__theme_light {
-  --dp-highlight-color: rgba(16, 0, 158, 0.329);
-}
-</style>

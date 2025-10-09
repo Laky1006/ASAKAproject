@@ -102,15 +102,14 @@
         </div>
 
         <!-- Time Slots -->
-        <div>
-          <InputLabel value="Available Service Slots" />
-          <div v-for="(slot, index) in form.available_slots" :key="index" class="flex gap-4 items-center mt-2">
-            <input type="date" v-model="slot.date" class="border px-2 py-1 rounded w-1/3" />
-            <input type="time" v-model="slot.time" class="border px-2 py-1 rounded w-1/3" />
-            <button type="button" @click="removeSlot(index)" class="text-red-500 text-sm hover:underline">Remove</button>
-          </div>
-          <button type="button" @click="addSlot" class="mt-2 text-blue-500 hover:underline text-sm">+ Add Slot</button>
-        </div>
+        <DateTimePicker
+                :weekStartsOn="1"
+                :step="60"
+                :minDate="todayISO"
+                :slots="form.available_slots" 
+                v-model:slots="form.available_slots"
+                variant="provider"
+              />
 
         <!-- Submit -->
         <div class="pt-4">
@@ -139,6 +138,8 @@ import MainLayout from '@/Layouts/MainLayout.vue'
 import InputLabel from '@/Components/basics/InputLabel.vue'
 import TextInput from '@/Components/basics/TextInput.vue'
 import PrimaryButton from '@/Components/basics/PrimaryButton.vue'
+import DateTimePicker from '@/Components/DateTimePicker.vue'
+
 
 export default {
   props: {
@@ -150,11 +151,12 @@ export default {
     InputLabel,
     TextInput,
     PrimaryButton,
+    DateTimePicker,
   },
   setup(props) {
     const newLabel = ref('')
     const labelSuggestions = [
-      'Math', 'English', 'Latvian', 'Biology', 'Language', 'Coding', 'Leisure',
+      'Nails', 'Hair', 'Skincare', 'Lashes', 'Body', 'Makeup', 'Wellness',
     ]
 
     const form = useForm({

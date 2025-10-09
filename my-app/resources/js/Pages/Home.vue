@@ -14,8 +14,7 @@ const sortOption = ref('az')
 const selectedLabels = ref([])
 
 const availableLabels = [
-  'Math', 'English', 'Latvian', 'Science', 'Drawing',
-  'Leisure activity', 'Cooking', 'Coding', 'Music', 'Creative', 'Fun'
+  'Nails', 'Hair', 'Skincare', 'Lashes', 'Body', 'Makeup', 'Wellness',
 ]
 
 const sortOptions = {

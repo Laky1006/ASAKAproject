@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('reviews', function (Blueprint $table) {
+        Schema::create('providers', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('reguser_id')->constrained()->onDelete('cascade');
-            $table->foreignId('service_id')->constrained()->onDelete('cascade');
-            $table->unsignedTinyInteger('rating'); // from 1 to 5
-            $table->text('comment')->nullable();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('location')->nullable();
+            $table->text('bio')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('service_reviews');
+        Schema::dropIfExists('providers');
     }
 };

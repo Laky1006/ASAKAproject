@@ -1,5 +1,5 @@
 <template>
-  <div ref="layoutRoot" class="flex flex-col min-h-svh bg-[#f8f6f4]">
+  <div class="flex flex-col min-h-svh bg-[#FFF8F0]">
 
     <!-- Mobile Sidebar Overlay -->
     <div 
@@ -8,8 +8,8 @@
       class="fixed inset-0 bg-black/20 z-40 sm:hidden"
     ></div>
 
-    <!-- Mobile Sidebar: FIXED and stays visible while scrolling -->
-    <nav 
+    <!-- Mobile Sidebar -->
+    <nav
       :class="[
         'fixed left-0 w-80 max-w-[85vw] bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 sm:hidden overflow-y-auto',
         showMobileMenu ? 'translate-x-0' : '-translate-x-full',
@@ -17,13 +17,12 @@
       ]"
     >
       <div class="flex items-center justify-between p-6 border-b border-[#e8e5e2]">
+        <!-- Logo -->
         <div class="flex items-center gap-3">
-          <img 
-            src="/images/B (1).png" 
-            class="h-12 w-12 object-contain"
-          />
+          <img src="/images/B (1).png" class="h-12 w-12 object-contain" />
         </div>
-        <button 
+
+        <button
           @click="showMobileMenu = false"
           class="p-2 text-[#6b5b73] hover:text-[#e4299c] transition-colors"
         >
@@ -34,27 +33,14 @@
       </div>
 
       <div class="px-6 py-4 space-y-2 font-baron">
-        <button
-          v-if="user?.role === 'admin'"
-          @click="goAdmin"
-          class="block w-full text-left py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg"
-        >
-          Admin
-        </button>
-        <a 
-          href="/" 
-          @click="showMobileMenu = false"
-          class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg"
-        >
+        <Link href="/" @click="showMobileMenu = false"
+          class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
           Home
-        </a>
-        <a 
-          :href="route('about')" 
-          @click="showMobileMenu = false"
-          class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg"
-        >
+        </Link>
+        <Link :href="route('about')" @click="showMobileMenu = false"
+          class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
           About
-        </a>
+        </Link>
 
         <!-- Mobile User Section -->
         <div v-if="user" class="border-t border-[#e8e5e2] pt-4 mt-4">
@@ -71,34 +57,32 @@
             />
             <span class="text-[#6b5b73] font-medium">{{ user.username }}</span>
           </div>
-          
-          <Link 
-            :href="route('profile.edit')" 
-            @click="showMobileMenu = false"
-            class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg"
-          >
+
+          <Link :href="route('profile.edit')" @click="showMobileMenu = false"
+            class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
             Profile
           </Link>
-          <Link 
-            :href="route('my-services')" 
-            @click="showMobileMenu = false"
-            class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg"
-          >
-            My services
+
+          <!-- MyServices switches to AdminPanel when loged in as Admin -->
+          <Link v-if="user.role !== 'admin'" :href="route('my-services')" @click="showMobileMenu = false"
+            class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
+            My Services
           </Link>
-          <Link 
-            :href="route('notifications.index')" 
-            @click="showMobileMenu = false"
-            class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg"
-          >
+
+          <Link v-if="user.role === 'admin'" :href="route('admin-panel.dashboard')" @click="showMobileMenu = false"
+            class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
+            Admin Panel
+          </Link>
+
+
+          <Link :href="route('notifications.index')" @click="showMobileMenu = false"
+            class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
             Notifications
           </Link>
 
           <form @submit.prevent="logout" class="block">
-            <button 
-              type="submit" 
-              class="w-full text-left py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg"
-            >
+            <button type="submit"
+              class="w-full text-left py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
               Log Out
             </button>
           </form>
@@ -106,20 +90,18 @@
 
         <!-- Mobile Login -->
         <div v-else class="border-t border-[#e8e5e2] pt-4 mt-4">
-          <a 
-            href="/login" 
-            @click="showMobileMenu = false"
-            class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg"
-          >
+          <Link href="/login" @click="showMobileMenu = false"
+            class="block py-3 px-4 text-[#6b5b73] hover:text-[#e4299c] hover:bg-[#f8f6f4] transition-colors rounded-lg">
             Log In
-          </a>
+          </Link>
         </div>
       </div>
     </nav>
 
-    <!-- STICKY Header - stays at top when scrolling -->
-    <header class="sticky top-0 z-50 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center bg-white shadow-sm border-b border-[#e8e5e2]">      
-      <!-- Logo Section -->
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center bg-white shadow-sm border-b border-[#e8e5e2]">
+
+      <!-- Logo -->
       <div class="flex items-center gap-4">
         <img 
           src="/images/B (1).png" 
@@ -140,17 +122,9 @@
 
       <!-- Desktop Navigation -->
       <nav class="hidden sm:flex items-center gap-8 lg:gap-10 text-base lg:text-lg text-[#6b5b73] font-baron">
-        <button
-          v-if="user?.role === 'admin'"
-          @click="goAdmin"
-          class="text-[#6b5b73] hover:text-[#e4299c] hover:underline bg-transparent px-0 py-0 transition-colors duration-200"
-        >
-          Admin
-        </button>
-        <a href="/" class="hover:text-[#e4299c] transition-colors duration-200">Home</a>
-        <a :href="route('about')" class="hover:text-[#e4299c] transition-colors duration-200">About</a>
+        <Link href="/" class="hover:text-[#e4299c] transition-colors duration-200">Home</Link>
+        <Link :href="route('about')" class="hover:text-[#e4299c] transition-colors duration-200">About</Link>
 
-        <!-- Desktop User Menu -->
         <div v-if="user" class="relative" ref="dropdown">
           <button 
             @click="toggleMenu" 
@@ -171,28 +145,29 @@
           </button>
 
           <!-- Desktop Dropdown Menu -->
-          <div
-            v-if="showMenu"
+          <div v-if="showMenu"
             class="absolute right-0 mt-2 w-44 bg-white text-[#6b5b73] shadow-xl rounded-lg overflow-hidden z-50 border border-[#e8e5e2]"
           >
             <Link :href="route('profile.edit')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">Profile</Link>
-            <Link :href="route('my-services')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">My services</Link>
+            <Link v-if="user.role !== 'admin'" :href="route('my-services')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">My Services</Link>
+            <Link v-if="user.role === 'admin'" :href="route('admin-panel.dashboard')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">Admin Panel</Link>
             <Link :href="route('notifications.index')" class="block px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">Notifications</Link>
 
-            <form @submit.prevent="logout" class="block border-t border-[#e8e5e2]">
-              <button type="submit" class="w-full text-left px-4 py-3 hover:bg-[#f8f6f4] hover:text-[#e4299c] transition-colors">Log Out</button>
+            <form @submit.prevent="logout" class="border-t border-[#febd59]">
+              <button type="submit" class="w-full text-left px-4 py-3 hover:bg-[#FFF8F0] hover:text-[#e4299c]">Log Out</button>
             </form>
+
           </div>
         </div>
 
         <!-- Desktop Login -->
         <div v-else>
-          <a href="/login" class="hover:text-[#e4299c] transition-colors duration-200">Log In</a>
+          <Link href="/login" class="hover:text-[#e4299c] transition-colors duration-200">Log In</Link>
         </div>
       </nav>
     </header>
 
-    <!-- Page Content -->
+    <!-- Page Content (made on the main page) -->
     <main class="grow">
       <slot />
     </main>
@@ -211,49 +186,52 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
+defineProps({ user: Object })
 
-export default {
-  props: { user: Object },
-  components: { Link },
-  data() {
-    return { 
-      showMenu: false,
-      showMobileMenu: false
-    }
-  },
-  methods: {
-    toggleMenu() {
-      this.showMenu = !this.showMenu
-    },
-    logout() {
-      router.post('/logout')
-      this.showMobileMenu = false
-    },
-    handleClickOutside(event) {
-      if (this.showMenu && this.$refs.dropdown && !this.$refs.dropdown.contains(event.target)) {
-        this.showMenu = false
-      }
-    },
-    handleEscapeKey(event) {
-      if (event.key === 'Escape') {
-        if (this.showMenu) this.showMenu = false
-        if (this.showMobileMenu) this.showMobileMenu = false
-      }
-    },
-    goAdmin() {
-      router.get('/admin')
-      this.showMobileMenu = false
-    },
-  },
-  mounted() {
-    document.addEventListener('click', this.handleClickOutside)
-    document.addEventListener('keydown', this.handleEscapeKey)
-  },
-  beforeUnmount() {
-    document.removeEventListener('click', this.handleClickOutside)
-    document.removeEventListener('keydown', this.handleEscapeKey)
-  },
+// state
+const showMenu = ref(false)
+const showMobileMenu = ref(false)
+
+// refs
+const dropdown = ref(null)
+
+const closeMenus = () => {
+  showMenu.value = false
+  showMobileMenu.value = false
 }
+
+// actions
+const toggleMenu = () => { showMenu.value = !showMenu.value }
+
+const logout = () => {
+  // fallback if Ziggy breaks down
+  const hasRoute = typeof route === 'function'
+  router.post(hasRoute ? route('logout') : '/logout')
+  showMobileMenu.value = false
+}
+
+// listeners
+const handleClickOutside = (event) => {
+  if (showMenu.value && dropdown.value && !dropdown.value.contains(event.target)) {
+    showMenu.value = false
+  }
+}
+
+const handleEscapeKey = (event) => {
+  if (event.key === 'Escape') closeMenus()
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+  document.addEventListener('keydown', handleEscapeKey)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('keydown', handleEscapeKey)
+})
 </script>
+
