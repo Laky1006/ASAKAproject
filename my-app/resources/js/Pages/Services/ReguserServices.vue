@@ -1,7 +1,7 @@
 <template>
   <MainLayout :user="auth.user">
     <section class="max-w-4xl mx-auto py-10 px-6">
-      <h1 class="text-2xl font-bold mb-6">My Booked Services</h1>
+      <h1 class="text-3xl font-bold mb-8 text-[#2D1810]">My Booked Services</h1>
 
       <div v-if="items.length">
         <transition-group name="fade" tag="ul" class="space-y-4">
@@ -9,27 +9,35 @@
             v-for="service in items"
             :key="compositeId(service)"
             v-show="!cancelingIds.includes(compositeId(service))"
-            class="border border-gray-200 rounded p-4 bg-white shadow-sm flex items-center justify-between gap-4"
+            class="backdrop-blur-lg bg-white/80 border border-white/60 rounded-2xl p-5 shadow-xl flex items-center justify-between gap-4 hover:shadow-2xl transition-all duration-300"
           >
             <!-- Left: Clickable area goes to show page -->
             <Link
               :href="route('services.show', service.id)"
-              class="flex items-center gap-4 flex-1 cursor-pointer hover:bg-gray-50 rounded-md transition p-1 -m-1"
+              class="flex items-center gap-4 flex-1 cursor-pointer hover:bg-white/40 rounded-xl transition-all duration-200 p-2 -m-2"
             >
-              <img
-                :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
-                alt="Service banner"
-                class="w-24 h-24 object-cover rounded-md flex-shrink-0"
-              />
+              <div class="relative overflow-hidden rounded-xl flex-shrink-0 shadow-md">
+                <img
+                  :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
+                  alt="Service banner"
+                  class="w-24 h-24 object-cover"
+                />
+                <div class="absolute inset-0 bg-gradient-to-br from-[#e4299c]/20 to-[#e8662c]/20 mix-blend-multiply"></div>
+              </div>
               <div>
-                <div class="text-xl font-semibold text-gray-800">
+                <div class="text-xl font-bold text-[#2D1810] mb-1">
                   {{ service.title }}
                 </div>
-                <div class="text-sm text-gray-600 mt-1">
-                  With: {{ service.provider }}
+                <div class="text-sm text-[#6b5b73] mb-2 font-body">
+                  With: <span class="font-semibold text-[#2D1810]">{{ service.provider }}</span>
                 </div>
-                <div class="mt-2 text-gray-700">
-                  📅 {{ service.date }} &nbsp;&nbsp; 🕒 {{ service.time }}
+                <div class="flex items-center gap-3 text-sm text-[#6b5b73] font-body">
+                  <span class="inline-flex items-center gap-1">
+                    📅 {{ service.date }}
+                  </span>
+                  <span class="inline-flex items-center gap-1">
+                    🕒 {{ service.time }}
+                  </span>
                 </div>
               </div>
             </Link>
@@ -38,7 +46,7 @@
             <div>
               <button
                 @click.stop="requestCancel(service)"
-                class="bg-red-600 text-white px-5 py-2 text-base rounded hover:bg-red-700 transition"
+                class="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-2.5 text-sm rounded-xl hover:shadow-lg transition-all duration-200 font-semibold"
               >
                 Cancel
               </button>
@@ -47,8 +55,10 @@
         </transition-group>
       </div>
 
-      <div v-else class="text-gray-500">
-        You haven't booked any services yet.
+      <div v-else class="backdrop-blur-lg bg-white/80 border border-white/60 rounded-2xl p-8 text-center shadow-xl">
+        <div class="text-[#6b5b73] text-lg font-body">
+          You haven't booked any services yet.
+        </div>
       </div>
     </section>
 

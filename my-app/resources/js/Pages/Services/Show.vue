@@ -1,20 +1,23 @@
 <template>
   <MainLayout :user="auth.user">
     <section class="max-w-5xl mx-auto py-10 px-6">
-      <!-- White card container -->
-      <div class="bg-white shadow sm:rounded-lg overflow-hidden">
-        <!-- Banner -->
-        <img
-          :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
-          alt="Lesson Banner"
-          class="w-full h-64 object-cover"
-        />
+      <!-- Glassmorphic card container -->
+      <div class="backdrop-blur-lg bg-white/60 shadow-xl border border-white/60 rounded-2xl overflow-hidden">
+        <!-- Banner with gradient overlay -->
+        <div class="relative overflow-hidden">
+          <img
+            :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
+            alt="Lesson Banner"
+            class="w-full h-64 object-cover"
+          />
+          <div class="absolute inset-0 bg-gradient-to-br from-[#e4299c]/30 to-[#e8662c]/30 mix-blend-multiply"></div>
+        </div>
 
         <div class="p-6 space-y-6">
-          <!-- Title + Rating -->
+          <!-- Title + Rating + Actions -->
           <div>
             <div class="flex items-center justify-between">
-              <h1 class="text-3xl font-bold">{{ service.title }}</h1>
+              <h1 class="text-3xl font-bold text-[#2D1810]">{{ service.title }}</h1>
 
               <div class="flex items-center gap-3">
                 <ReportButton
@@ -24,14 +27,14 @@
                 <Link
                   v-if="mode === 'provider'"
                   :href="route('services.edit', service.id)"
-                  class="bg-gray-800 text-white px-3 py-1.5 rounded hover:bg-gray-900 text-sm"
+                  class="bg-gradient-to-r from-[#e4299c] to-[#ff6b9d] text-white px-4 py-2 rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-semibold"
                 >
                   Edit
                 </Link>
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 mt-2">
               <div class="flex text-2xl">
                 <span
                   v-for="n in 5"
@@ -39,33 +42,33 @@
                   :class="service.rating >= n ? 'text-yellow-500' : 'text-gray-300'"
                 >★</span>
               </div>
-              <span class="text-gray-600 text-lg">
+              <span class="text-[#6b5b73] text-lg font-body">
                 {{ service.rating ? `${service.rating}/5` : 'Not Rated' }}
               </span>
             </div>
           </div>
 
           <!-- Description -->
-          <div>
-            <h2 class="text-xl font-semibold mb-2">Description</h2>
-            <p class="text-gray-700">{{ service.description }}</p>
+          <div class="backdrop-blur-sm bg-white/30 rounded-xl p-5 border border-white/40">
+            <h2 class="text-xl font-semibold mb-3 text-[#2D1810]">Description</h2>
+            <p class="text-[#6b5b73] leading-relaxed font-body">{{ service.description }}</p>
           </div>
 
           <!-- Contact Info & Price (side by side) -->
-          <div class="flex flex-col sm:flex-row gap-6">
-            <div class="flex-1">
-              <h2 class="text-xl font-semibold mb-2">&#128222; Contact Info</h2>
-              <p class="text-gray-700">{{ service.phone ?? 'N/A' }}</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="backdrop-blur-sm bg-white/30 rounded-xl p-5 border border-white/40">
+              <h2 class="text-lg font-semibold mb-2 text-[#2D1810]">&#128222; Contact Info</h2>
+              <p class="text-[#6b5b73] font-body">{{ service.phone ?? 'N/A' }}</p>
             </div>
-            <div class="flex-1">
-              <h2 class="text-xl font-semibold mb-2">&#128181; Price</h2>
-              <p class="text-gray-700">{{ service.price ?? 'Free' }}</p>
+            <div class="backdrop-blur-sm bg-white/30 rounded-xl p-5 border border-white/40">
+              <h2 class="text-lg font-semibold mb-2 text-[#2D1810]">&#128181; Price</h2>
+              <p class="text-[#e8662c] font-bold text-lg font-body">€ {{ service.price ?? 'Free' }}</p>
             </div>
           </div>
 
           <!-- PUBLIC (applicant) picker -->
-          <div v-if="mode === 'public'">
-            <h2 class="text-lg font-semibold mb-2">&#128197; Pick a date</h2>
+          <div v-if="mode === 'public'" class="backdrop-blur-sm bg-white/30 rounded-xl p-5 border border-white/40">
+            <h2 class="text-lg font-semibold mb-4 text-[#2D1810]">&#128197; Pick a date</h2>
             <DateTimePicker
               variant="applicant"
               :slots="applicantSlots"
@@ -73,15 +76,15 @@
               :week-start="1"
             />
 
-            <p v-if="flash.success" class="mt-4 text-green-600 text-sm">
+            <p v-if="flash.success" class="mt-4 text-green-600 text-sm font-semibold">
               {{ flash.success }}
             </p>
 
             <div class="mt-4" v-if="pickedSlot">
-              <div class="flex items-center justify-between bg-gray-100 px-4 py-2 rounded">
+              <div class="flex items-center justify-between backdrop-blur-md bg-white/50 px-5 py-4 rounded-xl border border-white/60 shadow-lg">
                 <div>
-                  <div class="font-medium">Selected</div>
-                  <div class="text-sm text-gray-700">
+                  <div class="font-semibold text-[#2D1810]">Selected</div>
+                  <div class="text-sm text-[#6b5b73] font-body">
                     {{ pickedSlot.date }} at {{ pickedSlot.time }}
                   </div>
                 </div>
@@ -90,20 +93,20 @@
                   v-if="auth.user && auth.user.role === 'reguser'"
                   :disabled="isBooking"
                   @click="submitSignup(pickedSlot.time, pickedSlot.date)"
-                  class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-60"
+                  class="bg-gradient-to-r from-[#e4299c] to-[#ff6b9d] text-white px-5 py-2.5 rounded-xl hover:shadow-lg disabled:opacity-60 transition-all duration-200 font-semibold"
                 >
                   {{ isBooking ? 'Booking...' : 'Sign Up' }}
                 </button>
-                <div v-else class="text-base text-black-700 font-bold">
-                  LogIn as User to apply
+                <div v-else class="text-sm text-[#2D1810] font-semibold backdrop-blur-sm bg-white/40 px-4 py-2 rounded-lg border border-white/40">
+                  Log in as User to apply
                 </div>
               </div>
             </div>
           </div>
 
           <!-- PROVIDER preview (ALL slots, read-only) -->
-          <div v-else>
-            <h2 class="text-lg font-semibold mb-2">&#128197; Schedule preview</h2>
+          <div v-else class="backdrop-blur-sm bg-white/30 rounded-xl p-5 border border-white/40">
+            <h2 class="text-lg font-semibold mb-4 text-[#2D1810]">&#128197; Schedule preview</h2>
             <DateTimePicker
               variant="provider"
               :readonly="true"
@@ -115,35 +118,36 @@
             />
 
             <div class="mt-4" v-if="mode === 'provider' && selectedProviderSlot">
-              <div class="flex items-center justify-between bg-gray-100 px-7 py-2 rounded">
-                <div class="">
-                  <div class="font-medium">Selected</div>
-                  <div class="text-sm text-gray-700">
-                    {{ selectedProviderSlot.date }} at {{ selectedProviderSlot.time }}
+              <div class="backdrop-blur-md bg-white/50 px-6 py-4 rounded-xl border border-white/60 shadow-lg">
+                <div class="flex items-center justify-between gap-4">
+                  <div>
+                    <div class="font-semibold text-[#2D1810]">Selected</div>
+                    <div class="text-sm text-[#6b5b73] font-body mt-1">
+                      {{ selectedProviderSlot.date }} at {{ selectedProviderSlot.time }}
+                    </div>
                   </div>
-                  
-                </div>
 
-                <div class="">
-                  <div class="text-sm mt-1">
-                    <span
-                      class="inline-flex items-center px-2 py-0.5 rounded text-sm"
-                      :class="selectedProviderSlot.available ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700'"
-                    >
-                      {{ selectedProviderSlot.available ? 'Free' : 'Booked' }}
-                    </span>
+                  <div class="flex-1 text-center">
+                    <div class="text-sm">
+                      <span
+                        class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-semibold backdrop-blur-sm border"
+                        :class="selectedProviderSlot.available 
+                          ? 'bg-green-100/80 text-green-700 border-green-200' 
+                          : 'bg-gray-100/80 text-gray-700 border-gray-200'"
+                      >
+                        {{ selectedProviderSlot.available ? 'Free' : 'Booked' }}
+                      </span>
+                    </div>
+                    <div v-if="!selectedProviderSlot.available" class="text-sm text-[#6b5b73] mt-2 font-body">
+                      By: <span class="font-semibold text-[#2D1810]">{{ selectedProviderSlot.reguser_name ?? 'Unknown user' }}</span>
+                    </div>
                   </div>
-                  <div v-if="!selectedProviderSlot.available" class="text-base text-gray-700 mt-1">
-                    By: <span class="font-semibold">{{ selectedProviderSlot.reguser_name ?? 'Unknown user' }}</span>
-                  </div>
-                </div>
 
-                <div class=" text-sm text-gray-500">
-                  <div class="text-sm">
+                  <div>
                     <button
                       v-if="!selectedProviderSlot.available"
                       type="button"
-                      class="bg-red-600 text-white px-3 py-1.5 rounded hover:bg-red-700"
+                      class="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-xl hover:shadow-lg transition-all duration-200 font-semibold text-sm"
                       @click="cancelSelectedByProvider"
                     >
                       Cancel booking
@@ -152,67 +156,65 @@
                 </div>
               </div>
             </div>
-
-
           </div>
         </div>
       </div>
 
-      <!-- Reviews -->
-      <div class="bg-white mt-8 p-6 shadow sm:rounded-lg space-y-4">
-        <h2 class="text-xl font-semibold mb-4">
-          Reviews <span class="text-gray-500">({{ reviews.length }})</span>
+      <!-- Reviews Section -->
+      <div class="backdrop-blur-lg bg-white/60 mt-8 p-6 shadow-xl border border-white/60 rounded-2xl space-y-4">
+        <h2 class="text-xl font-semibold text-[#2D1810]">
+          Reviews <span class="text-[#6b5b73]">({{ reviews.length }})</span>
         </h2>
 
-        <div v-if="auth.user?.role === 'reguser'" class="mb-6">
-          <div class="flex items-center gap-1 mb-2">
+        <div v-if="auth.user?.role === 'reguser'" class="mb-6 backdrop-blur-sm bg-white/100 rounded-xl p-5 border border-white/40">
+          <div class="flex items-center gap-1 mb-3">
             <span
               v-for="n in 5"
               :key="n"
-              class="text-2xl cursor-pointer"
+              class="text-3xl cursor-pointer transition-all hover:scale-110" 
               :class="n <= form.rating ? 'text-yellow-500' : 'text-gray-300'"
               @click="form.rating = n"
             >★</span>
           </div>
-          <p v-if="form.errors.rating" class="text-red-600 text-sm -mt-1 mb-2">
+          <p v-if="form.errors.rating" class="text-red-600 text-sm mb-2 font-semibold ">
             {{ form.errors.rating }}
           </p>
 
           <textarea
             v-model="form.comment"
             rows="3"
-            class="w-full border rounded px-3 py-2"
-            :class="form.errors.comment ? 'border-red-500' : 'border-gray-300'"
+            class="w-full rounded-xl backdrop-blur-sm bg-white/50 border px-4 py-3 text-[#2D1810] placeholder-[#6b5b73] focus:ring-2 focus:ring-[#e4299c] focus:bg-white/70 outline-none transition-all font-body"
+            :class="form.errors.comment ? 'border-red-500' : 'border-white/60'"
             :aria-invalid="!!form.errors.comment"
             placeholder="Write a comment (optional)"
           ></textarea>
 
-          <p v-if="form.errors.comment" class="text-red-600 text-sm mt-1">
+          <p v-if="form.errors.comment" class="text-red-600 text-sm mt-2 font-semibold">
             {{ form.errors.comment }}
           </p>
 
-          <div v-if="form.errors.review" class="text-red-500 text-sm mt-2">
+          <div v-if="form.errors.review" class="text-red-500 text-sm mt-2 font-semibold">
             {{ form.errors.review }}
           </div>
 
           <button
             @click="submitReview"
             :disabled="form.processing"
-            class="mt-2 bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 text-sm"
+            class="mt-3 bg-gradient-to-r from-[#e4299c] to-[#ff6b9d] text-white px-5 py-2 rounded-xl hover:shadow-lg transition-all duration-200 font-semibold text-sm"
           >
             {{ form.processing ? 'Posting...' : 'Post Review' }}
           </button>
 
-          <p v-if="flash.success" class="text-green-600 text-sm mt-2">
+          <p v-if="flash.success" class="text-green-600 text-sm mt-3 font-semibold">
             {{ flash.success }}
           </p>
         </div>
 
-        <div v-else class="text-gray-500 italic mb-6">
+        <div v-else class="text-[#6b5b73] italic mb-6 backdrop-blur-sm bg-white/20 rounded-xl p-4 border border-white/30 font-body">
           You must be a registered user to leave a review.
         </div>
 
-        <div v-if="reviews.length">
+        <div v-if="reviews.length" class="space-y-3">
           <div
             v-for="(review, index) in sortedReviews"
             :key="review.id ?? index"
@@ -226,7 +228,9 @@
             />
           </div>
         </div>
-        <div v-else class="text-sm text-gray-500">No reviews yet.</div>
+        <div v-else class="text-sm text-[#6b5b73] backdrop-blur-sm bg-white/20 rounded-xl p-4 border border-white/30 font-body">
+          No reviews yet.
+        </div>
       </div>
 
       <!-- PopUp confirmation window -->
@@ -239,6 +243,7 @@
     </section>
   </MainLayout>
 </template>
+
 
 <script setup>
 import MainLayout from '@/Layouts/MainLayout.vue'

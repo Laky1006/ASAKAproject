@@ -7,7 +7,7 @@
         <div class="bg-white p-6 shadow sm:rounded-lg sm:p-8">
           <h1 class="text-2xl font-bold mb-6">Edit Service</h1>
 
-          <form @submit.prevent="submitForm" class="space-y-6">
+          <form @submit.prevent="submitForm" @keydown.enter.capture="blockEnterSubmit" lass="space-y-6">
             <!-- Title -->
             <div>
               <InputLabel for="title" value="Service Title" />
@@ -175,6 +175,18 @@ const labelSuggestions = ['Nails', 'Hair', 'Skincare', 'Lashes', 'Body', 'Makeup
 // File upload
 function handleBannerChange(event) {
   form.banner = event.target.files[0]
+}
+
+function blockEnterSubmit(e) {
+  const el = e.target
+  // allow Enter in textareas
+  const isTextarea = el.tagName === 'TEXTAREA' || el.closest('textarea')
+  // allow Enter on specifically flagged fields (like the label input)
+  const allow = el.hasAttribute('data-allow-enter')
+
+  if (!isTextarea && !allow) {
+    e.preventDefault()  // stops the implicit form submit
+  }
 }
 
 // Submit form

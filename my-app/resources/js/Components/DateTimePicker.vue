@@ -1,8 +1,8 @@
 <template>
   <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <!-- calendar -->
-    <div class="bg-white border rounded-lg p-4">
-      <div class="mb-3 font-medium">
+    <div class="backdrop-blur-md bg-white/70 border border-white/60 rounded-xl p-5 shadow-lg">
+      <div class="mb-4 font-semibold text-lg text-[#2D1810]">
         {{ monthNames[displayMonth] }} {{ displayYear }}
       </div>
 
@@ -21,18 +21,18 @@
     </div>
 
     <!-- time -->
-    <div class="bg-white border rounded-lg p-4">
+    <div class="backdrop-blur-md bg-white/70 border border-white/60 rounded-xl p-5 shadow-lg">
       <div class="space-y-4">
         <!-- PROVIDER: EDITOR (existing behavior) -->
         <div v-if="props.variant === 'provider' && !props.readonly" class="space-y-4">
-          <div class="text-sm text-gray-600">
+          <div class="text-sm text-[#6b5b73] font-body">
             Selected date:
-            <span class="font-medium" v-if="selectedDate">{{ selectedDate }}</span>
+            <span class="font-semibold text-[#2D1810]" v-if="selectedDate">{{ selectedDate }}</span>
             <span v-else class="italic">none</span>
           </div>
 
           <div>
-            <label class="text-sm block mb-1">Time</label>
+            <label class="text-sm block mb-2 font-semibold text-[#2D1810]">Time</label>
             <DatePicker
               ref="tp"
               v-model="timeModel"
@@ -52,7 +52,7 @@
           <div class="flex items-center gap-2">
             <button
               type="button"
-              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              class="px-4 py-2 bg-gradient-to-r from-[#e4299c] to-[#ff6b9d] text-white rounded-xl hover:shadow-lg disabled:opacity-50 transition-all duration-200 font-semibold text-sm"
               :disabled="!selectedDate || timeModel === null"
               :title="!selectedDate ? 'Pick a date first' : (timeModel===null ? 'Pick a time' : '')"
               @click="emitAdd"
@@ -62,15 +62,15 @@
 
             <button
               type="button"
-              class="px-3 py-2 border rounded hover:bg-gray-50"
+              class="px-4 py-2 backdrop-blur-sm bg-white/60 border border-white/60 rounded-xl hover:bg-white/80 transition-all duration-200 font-semibold text-sm text-[#2D1810]"
               @click="clearTime"
             >
               Clear time
             </button>
           </div>
 
-          <div v-if="selectedDate" class="mt-2">
-            <div class="text-sm font-medium mb-2">
+          <div v-if="selectedDate" class="mt-3">
+            <div class="text-sm font-semibold mb-3 text-[#2D1810]">
               Times on {{ selectedDate }}
             </div>
 
@@ -78,12 +78,12 @@
               <div
                 v-for="slot in daySlots"
                 :key="slot.time"
-                class="flex items-center justify-between border rounded px-3 py-2 bg-white"
+                class="flex items-center justify-between backdrop-blur-sm bg-white/60 border border-white/40 rounded-lg px-4 py-2.5 shadow-sm"
               >
-                <span class="text-sm">{{ slot.displayTime }}</span>
+                <span class="text-sm font-semibold text-[#2D1810]">{{ slot.displayTime }}</span>
                 <button
                   type="button"
-                  class="text-red-600 text-sm hover:underline"
+                  class="text-red-600 text-sm hover:underline font-semibold"
                   @click="emitRemove(slot.time)"
                 >
                   Remove
@@ -91,59 +91,60 @@
               </div>
             </div>
 
-            <p v-else class="text-sm text-gray-500 italic">
+            <p v-else class="text-sm text-[#6b5b73] italic font-body">
               No times added for this date yet.
             </p>
           </div>
         </div>
 
         <!-- PROVIDER: PREVIEW (read-only, shows all) -->
-<div v-else-if="props.variant === 'provider' && props.readonly" class="space-y-4">
-  <div class="text-lg font-medium mb-2">
-    Schedule preview on
-    <span class="font-medium" v-if="selectedDate">{{ selectedDate }}</span>
-    <span v-else class="italic text-gray-500">select date...</span>
-  </div>
+        <div v-else-if="props.variant === 'provider' && props.readonly" class="space-y-4">
+          <div class="text-lg font-semibold mb-3 text-[#2D1810]">
+            Schedule preview on
+            <span class="font-semibold" v-if="selectedDate">{{ selectedDate }}</span>
+            <span v-else class="italic text-[#6b5b73]">select date...</span>
+          </div>
 
-  <div v-if="selectedDate">
-    <div v-if="previewSlots.length" class="grid grid-cols-2 gap-2">
-      <button
-        v-for="slot in previewSlots"
-        :key="slot.time"
-        type="button"
-        class="px-3 py-2 border rounded text-center"
-        :class="[
-          slot.available ? 'border-green-500' : 'border-gray-300 text-gray-400 line-through',
-          selectedPreviewTime === slot.time ? 'ring-2 ring-blue-600' : ''
-        ]"
-        @click="selectPreviewSlot(slot)"
-      >
-        {{ slot.displayTime }}
-      </button>
-    </div>
+          <div v-if="selectedDate">
+            <div v-if="previewSlots.length" class="grid grid-cols-2 gap-2">
+              <button
+                v-for="slot in previewSlots"
+                :key="slot.time"
+                type="button"
+                class="px-3 py-2.5 backdrop-blur-sm border rounded-xl text-center font-semibold text-sm transition-all duration-200"
+                :class="[
+                  slot.available 
+                    ? 'bg-green-50/80 border-green-400 text-green-700 hover:bg-green-100/80' 
+                    : 'bg-gray-100/80 border-gray-300 text-gray-400 line-through',
+                  selectedPreviewTime === slot.time ? 'ring-2 ring-[#e4299c]' : ''
+                ]"
+                @click="selectPreviewSlot(slot)"
+              >
+                {{ slot.displayTime }}
+              </button>
+            </div>
 
-    <p v-else class="text-sm text-gray-500 italic">
-      No times for this date.
-    </p>
-  </div>
+            <p v-else class="text-sm text-[#6b5b73] italic font-body">
+              No times for this date.
+            </p>
+          </div>
 
-  <div class="mt-2 flex items-center gap-4 text-sm text-gray-600">
-    <span class="inline-flex items-center gap-1">
-      <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span> Available
-    </span>
-    <span class="inline-flex items-center gap-1">
-      <span class="inline-block w-2.5 h-2.5 rounded-full bg-gray-400"></span> Booked
-    </span>
-  </div>
-</div>
-
+          <div class="mt-3 flex items-center gap-4 text-sm text-[#6b5b73] font-body">
+            <span class="inline-flex items-center gap-1.5">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-green-500"></span> Available
+            </span>
+            <span class="inline-flex items-center gap-1.5">
+              <span class="inline-block w-2.5 h-2.5 rounded-full bg-gray-400"></span> Booked
+            </span>
+          </div>
+        </div>
 
         <!-- APPLICANT (existing) -->
         <div v-else class="space-y-4">
-          <div class="text-lg font-medium mb-2">
+          <div class="text-lg font-semibold mb-3 text-[#2D1810]">
             Available times on
-            <span class="font-medium" v-if="selectedDate">{{ selectedDate }}</span>
-            <span v-else class="italic text-gray-500">select date...</span>
+            <span class="font-semibold" v-if="selectedDate">{{ selectedDate }}</span>
+            <span v-else class="italic text-[#6b5b73]">select date...</span>
           </div>
 
           <div v-if="selectedDate">
@@ -152,15 +153,15 @@
                 v-for="slot in daySlots"
                 :key="slot.time"
                 type="button"
-                class="px-3 py-2 border rounded hover:bg-gray-50"
-                :class="{ 'ring-2 ring-blue-600': isSelected(slot) }"
+                class="px-3 py-2.5 backdrop-blur-sm bg-white/60 border border-white/60 rounded-xl hover:bg-white/80 transition-all duration-200 font-semibold text-sm text-[#2D1810]"
+                :class="{ 'ring-2 ring-[#e4299c] bg-white/90': isSelected(slot) }"
                 @click="selectApplicantSlot(slot)"
               >
                 {{ slot.displayTime }}
               </button>
             </div>
 
-            <p v-else class="text-sm text-gray-500 italic">
+            <p v-else class="text-sm text-[#6b5b73] italic font-body">
               No times available for this date.
             </p>
           </div>
@@ -360,4 +361,7 @@ onBeforeUnmount(() => unbindEnter())
 :deep(.dp__time_display)    { font-size: 24px; }
 :deep(.dp__time_col)        { padding-left: 8px; padding-right: 8px; }
 :deep(.dp__selection_preview){ display: none !important; }
+:deep(.dp__time_display) {
+  pointer-events: none;
+}
 </style>

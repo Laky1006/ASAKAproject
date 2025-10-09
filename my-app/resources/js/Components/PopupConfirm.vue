@@ -2,22 +2,22 @@
   <Transition name="fade">
     <div
       v-if="show"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
     >
-      <div class="bg-white rounded-2xl p-6 w-80 shadow-xl">
-        <h2 class="text-lg font-semibold mb-3">{{ title }}</h2>
-        <p class="text-gray-700 mb-6">{{ message }}</p>
+      <div class="backdrop-blur-xl bg-white/90 rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-white/60">
+        <h2 class="text-xl font-bold mb-3 text-[#2D1810]">{{ title }}</h2>
+        <p class="text-[#6b5b73] mb-6 font-body leading-relaxed">{{ message }}</p>
 
-        <div class="flex justify-end gap-3">
+        <div class="flex flex-col sm:flex-row justify-end gap-3">
           <button
             @click="$emit('update:show', false)"
-            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+            class="px-5 py-2 rounded-xl backdrop-blur-sm bg-white/70 border border-white/60 hover:bg-white/90 transition-all duration-200 font-semibold text-sm text-[#2D1810]"
           >
             Cancel
           </button>
           <button
             @click="confirmAction"
-            class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+            class="px-5 py-2 rounded-xl bg-gradient-to-r from-[#e4299c] to-[#ff6b9d] text-white hover:shadow-lg transition-all duration-200 font-semibold text-sm"
           >
             Confirm
           </button>
