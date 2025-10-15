@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class ReportController extends Controller
 {
-    // ✅ User-side reporting
+    // User-side reporting
     public function store(Request $request)
     {
         $request->validate([
