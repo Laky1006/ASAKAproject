@@ -12,6 +12,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\Admin\AdminPanelController;
 use App\Http\Controllers\ProviderController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 
 
 
@@ -61,7 +62,7 @@ Route::get('/about', function () {
 /**
  * Authenticated routes
  */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -137,7 +138,7 @@ Route::get('/services-create', fn () => Inertia::render('Services/CreateService'
 Route::get('/services/{id}', [ServiceController::class, 'show'])->name('services.show');
 
 // Admin-only
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin-panel', [AdminPanelController::class, 'index'])
         ->name('admin-panel.dashboard');
 
