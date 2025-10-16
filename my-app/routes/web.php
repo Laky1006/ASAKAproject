@@ -14,6 +14,7 @@ use App\Http\Controllers\ProviderController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
+
 // verification
 // 2.1 Built-in auth routes + verification
 Auth::routes(['verify' => true]);  // requires laravel/ui (you installed earlier)
@@ -45,6 +46,7 @@ Route::middleware(['auth','verified'])->group(function () {
 // Route::get('/', [ServiceController::class, 'index']);
 Route::get('/', [\App\Http\Controllers\ServiceController::class, 'index'])->name('home');
 
+Route::get('/saved-services', [App\Http\Controllers\SavedServiceController::class, 'index'])->name('saved-services.index');
 
 Route::get('/dashboard', fn () => Inertia::render('Dashboard'))
     ->middleware(['auth', 'verified'])
@@ -69,7 +71,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
-    // Notifications
+    // Saved services & folder management
+    Route::get('/saved-services', [App\Http\Controllers\SavedServiceController::class, 'index'])->name('saved-services.index');
+    Route::post('/saved-services', [App\Http\Controllers\SavedServiceController::class, 'store'])->name('saved-services.store');
+    Route::delete('/saved-services', [App\Http\Controllers\SavedServiceController::class, 'destroy'])->name('saved-services.destroy');
+    Route::post('/saved-services/folders', [App\Http\Controllers\SavedServiceController::class, 'createFolder'])->name('saved-services.folders.create');
+    Route::patch('/saved-services/folders/rename', [App\Http\Controllers\SavedServiceController::class, 'renameFolder'])->name('saved-services.folders.rename');
+    Route::delete('/saved-services/folders/delete', [App\Http\Controllers\SavedServiceController::class, 'deleteFolder'])->name('saved-services.folders.delete');
+    Route::patch('/saved-services/move', [App\Http\Controllers\SavedServiceController::class, 'moveToFolder'])->name('saved-services.move');
+
+        // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
     // provider preview 
@@ -157,12 +168,8 @@ Route::get('/tests', function () {
 
 
 // Providers
-
-
 Route::get('/providers', [ProviderController::class, 'index'])->name('providers.index');
 Route::get('/providers/{id}', [ProviderController::class, 'show'])->name('providers.show');
-
-
 
 require __DIR__ . '/auth.php';
 
