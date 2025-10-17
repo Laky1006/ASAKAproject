@@ -29,6 +29,7 @@ class ProviderSeeder extends Seeder
                 'email' => 'bob@example.com',
                 'password' => '12345678',
                 'role' => 'provider',
+                'email_verified_at' => now(),
             ],
         ];
 
