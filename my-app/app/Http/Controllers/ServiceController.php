@@ -59,23 +59,31 @@ class ServiceController extends Controller
         })->toArray();
     }
 
-    public function index(Request $request)
-    {
-        //$services = Service::all();
-        $services = Service::with('provider.user')->get(); // eager load provider + user
+        public function index(Request $request)
+{
+    $services = Service::with('provider.user')->get();
 
-        $providers = Provider::with([
+    $providers = Provider::with([
         'user:id,name',
         'services:id,provider_id,title,price,rating,banner',
     ])->get();
 
+    // Get user's saved services if logged in
+    $savedServiceIds = [];
+    if (auth()->check()) {
+        $savedServiceIds = auth()->user()->savedServices()->pluck('service_id')->toArray();
+    }
+
     return Inertia::render('Home', [
         'services'  => $services,
-        'providers' => $providers,   // new
-        'auth'      => ['user' => Auth::user()],
-          'initialTab' => $request->query('tab', 'services'), // NEW
+        'providers' => $providers,
+        'auth'      => ['user' => auth()->user()],
+        'initialTab' => $request->query('tab', 'services'),
+        'savedServiceIds' => $savedServiceIds, // NEW - pass saved service IDs
     ]);
-    }
+}
+
+
 
     // Gets all the needed things to show on show.vue
     public function show($id)

@@ -47,4 +47,9 @@ class Service extends Model
         $this->save();
     }
 
+    public function savedByUsers()
+    {
+    return $this->hasMany(\App\Models\SavedService::class);
+    }
+
 }

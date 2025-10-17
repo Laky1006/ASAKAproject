@@ -12,6 +12,8 @@ use Inertia\Inertia;
 use App\Http\Controllers\Admin\AdminPanelController;
 use App\Http\Controllers\ProviderController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
+
 
 
 // verification
@@ -45,6 +47,7 @@ Route::middleware(['auth','verified'])->group(function () {
 // Route::get('/', [ServiceController::class, 'index']);
 Route::get('/', [\App\Http\Controllers\ServiceController::class, 'index'])->name('home');
 
+Route::get('/saved-services', [App\Http\Controllers\SavedServiceController::class, 'index'])->name('saved-services.index');
 
 Route::get('/dashboard', fn () => Inertia::render('Dashboard'))
     ->middleware(['auth', 'verified'])
@@ -59,7 +62,7 @@ Route::get('/about', function () {
 /**
  * Authenticated routes
  */
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -69,7 +72,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::delete('/reviews/{id}', [ReviewController::class, 'destroy'])->name('reviews.destroy');
 
-    // Notifications
+    // Saved services & folder management
+    Route::get('/saved-services', [App\Http\Controllers\SavedServiceController::class, 'index'])->name('saved-services.index');
+    Route::post('/saved-services', [App\Http\Controllers\SavedServiceController::class, 'store'])->name('saved-services.store');
+    Route::delete('/saved-services', [App\Http\Controllers\SavedServiceController::class, 'destroy'])->name('saved-services.destroy');
+    Route::post('/saved-services/folders', [App\Http\Controllers\SavedServiceController::class, 'createFolder'])->name('saved-services.folders.create');
+    Route::patch('/saved-services/folders/rename', [App\Http\Controllers\SavedServiceController::class, 'renameFolder'])->name('saved-services.folders.rename');
+    Route::delete('/saved-services/folders/delete', [App\Http\Controllers\SavedServiceController::class, 'deleteFolder'])->name('saved-services.folders.delete');
+    Route::patch('/saved-services/move', [App\Http\Controllers\SavedServiceController::class, 'moveToFolder'])->name('saved-services.move');
+
+        // Notifications
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
     // provider preview 
@@ -126,7 +138,7 @@ Route::get('/services-create', fn () => Inertia::render('Services/CreateService'
 Route::get('/services/{id}', [ServiceController::class, 'show'])->name('services.show');
 
 // Admin-only
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin-panel', [AdminPanelController::class, 'index'])
         ->name('admin-panel.dashboard');
 
@@ -157,12 +169,8 @@ Route::get('/tests', function () {
 
 
 // Providers
-
-
 Route::get('/providers', [ProviderController::class, 'index'])->name('providers.index');
 Route::get('/providers/{id}', [ProviderController::class, 'show'])->name('providers.show');
-
-
 
 require __DIR__ . '/auth.php';
 
