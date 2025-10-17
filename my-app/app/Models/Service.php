@@ -15,6 +15,7 @@ class Service extends Model
     protected $fillable = ['title', 'description', 'rating', 'provider_id', 'phone', 'banner'];
 
     protected $casts = [
+        'date' => 'date',
         'labels' => 'array',
     ];
 
@@ -44,6 +45,11 @@ class Service extends Model
         $average = $this->reviews()->avg('rating');
         $this->rating = $average;
         $this->save();
+    }
+
+    public function savedByUsers()
+    {
+    return $this->hasMany(\App\Models\SavedService::class);
     }
 
 }

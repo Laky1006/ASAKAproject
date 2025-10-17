@@ -61,5 +61,8 @@ class User extends Authenticatable implements MustVerifyEmail // implements Must
         return $this->hasOne(\App\Models\Provider::class);
     }
 
-
+    public function savedServices()
+    {
+    return $this->hasMany(\App\Models\SavedService::class);
+    }
 }

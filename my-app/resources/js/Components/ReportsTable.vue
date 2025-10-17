@@ -85,7 +85,10 @@ const confirmDelete = (r) => {
         <tbody class="divide-y divide-white/20 font-body">
           <tr v-for="r in reportsList" :key="r.id" class="hover:bg-white/30 transition-colors duration-150">
             <td class="px-4 sm:px-6 py-3 text-sm text-[#6b5b73] font-medium">{{ r.id }}</td>
-            <td class="px-4 sm:px-6 py-3 text-sm font-semibold text-[#2D1810]">{{ r.reporter?.name || 'Unknown' }}</td>
+            <td class="px-4 sm:px-6 py-3 text-sm font-semibold text-[#2D1810]">
+              {{ r.user?.name || 'Unknown' }}
+            </td>
+
             <td class="px-4 sm:px-6 py-3 text-sm text-[#6b5b73]">{{ r.reason || '—' }}</td>
             <td class="px-4 sm:px-6 py-3 text-sm text-[#6b5b73] hidden lg:table-cell">{{ new Date(r.created_at).toLocaleString() }}</td>
             <td class="px-4 sm:px-6 py-3">

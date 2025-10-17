@@ -1,7 +1,7 @@
 <script setup>
 import SearchSortFilter from '@/Components/SearchSortFilter.vue'
 import MainLayout from '@/Layouts/MainLayout.vue'
-import { Link } from '@inertiajs/vue3'
+import { Link, router } from '@inertiajs/vue3'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -9,6 +9,7 @@ const props = defineProps({
   auth: Object,
   providers: { type: Array, default: () => [] },
   initialTab: { type: String, default: 'services' },
+  savedServiceIds: { type: Array, default: () => [] }, // NEW PROP
 })
 
 const searchQuery = ref('')
@@ -55,6 +56,37 @@ const filteredProviders = computed(() => {
     return name.includes(q) || loc.includes(q)
   })
 })
+
+// Save functionality - Initialize with data from database
+const savedServices = ref(new Set(props.savedServiceIds))
+
+function isSaved(serviceId) {
+  return savedServices.value.has(serviceId)
+}
+
+function toggleSave(service) {
+  if (isSaved(service.id)) {
+    // Remove from saved
+    router.delete(route('saved-services.destroy'), {
+      data: { service_id: service.id },
+      preserveScroll: true,
+      onSuccess: () => {
+        savedServices.value.delete(service.id)
+      }
+    })
+  } else {
+    // Add to saved
+    router.post(route('saved-services.store'), {
+      service_id: service.id,
+      folder_name: null
+    }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        savedServices.value.add(service.id)
+      }
+    })
+  }
+}
 </script>
 
 <template>
@@ -156,64 +188,85 @@ const filteredProviders = computed(() => {
         />
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          <Link
+          <div
             v-for="service in filteredServices"
             :key="service.id"
-            :href="route('services.show', service.id)"
-            class="block overflow-hidden rounded-2xl backdrop-blur-lg bg-white/40 shadow-xl border border-white/60 hover:shadow-2xl hover:scale-105 transition-all duration-300"
+            class="relative overflow-hidden rounded-2xl backdrop-blur-lg bg-white/40 shadow-xl border border-white/60 hover:shadow-2xl hover:scale-105 transition-all duration-300"
           >
-            <!-- Image with gradient overlay -->
-            <div class="relative overflow-hidden">
-              <img
-                :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
-                alt="Service Banner"
-                class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
-              />
-              <!-- Gradient overlay -->
-              <div class="absolute inset-0 bg-gradient-to-br from-[#e4299c]/30 to-[#e8662c]/30 mix-blend-multiply"></div>
-            </div>
+            <!-- Save/Bookmark Button (Top Right) -->
+            <button
+              v-if="auth.user"
+              @click.stop="toggleSave(service)"
+              class="absolute top-3 right-3 z-10 w-10 h-10 rounded-full backdrop-blur-sm bg-white/80 hover:bg-white border border-white/60 flex items-center justify-center transition-all duration-200 shadow-lg"
+              :class="isSaved(service.id) ? 'text-red-500' : 'text-gray-400 hover:text-red-500'"
+            >
+              <!-- Heart Icon -->
+              <svg v-if="isSaved(service.id)" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+              <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+              </svg>
+            </button>
 
-            <div class="p-5">
-              <h3 class="text-xl font-bold mb-2 text-[#2D1810]">{{ service.title }}</h3>
-              <p class="text-sm text-[#6b5b73] mb-2 font-body">
-                Provider: <span class="font-semibold">{{ service.provider?.user?.name || 'Unknown' }}</span>
-              </p>
+            <!-- Clickable Link (Everything except save button) -->
+            <Link
+              :href="route('services.show', service.id)"
+              class="block"
+            >
+              <!-- Image with gradient overlay -->
+              <div class="relative overflow-hidden">
+                <img
+                  :src="service.banner ? `/storage/${service.banner}` : '/images/default-banner.jpg'"
+                  alt="Service Banner"
+                  class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
+                />
+                <!-- Gradient overlay -->
+                <div class="absolute inset-0 bg-gradient-to-br from-[#e4299c]/30 to-[#e8662c]/30 mix-blend-multiply"></div>
+              </div>
 
-              <!-- Rating -->
-              <div class="flex items-center text-sm mb-2">
-                <div class="flex">
-                  <span
-                    v-for="n in 5"
-                    :key="n"
-                    class="text-lg"
-                    :class="{
-                      'text-yellow-500': (service.rating || 0) >= n,
-                      'text-gray-300': (service.rating || 0) < n
-                    }"
-                  >★</span>
+              <div class="p-5">
+                <h3 class="text-xl font-bold mb-2 text-[#2D1810]">{{ service.title }}</h3>
+                <p class="text-sm text-[#6b5b73] mb-2 font-body">
+                  Provider: <span class="font-semibold">{{ service.provider?.user?.name || 'Unknown' }}</span>
+                </p>
+
+                <!-- Rating -->
+                <div class="flex items-center text-sm mb-2">
+                  <div class="flex">
+                    <span
+                      v-for="n in 5"
+                      :key="n"
+                      class="text-lg"
+                      :class="{
+                        'text-yellow-500': (service.rating || 0) >= n,
+                        'text-gray-300': (service.rating || 0) < n
+                      }"
+                    >★</span>
+                  </div>
+                  <span class="ml-2 text-[#6b5b73] font-body">
+                    {{ service.rating ? `${service.rating}/5` : 'Not rated' }}
+                  </span>
                 </div>
-                <span class="ml-2 text-[#6b5b73] font-body">
-                  {{ service.rating ? `${service.rating}/5` : 'Not rated' }}
-                </span>
-              </div>
 
-              <!-- Price -->
-              <p class="text-sm text-[#e8662c] font-bold mb-3 font-body">
-                Price: € {{ service.price ?? 'Free' }}
-              </p>
+                <!-- Price -->
+                <p class="text-sm text-[#e8662c] font-bold mb-3 font-body">
+                  Price: € {{ service.price ?? 'Free' }}
+                </p>
 
-              <!-- Labels -->
-              <div v-if="service.labels?.length" class="flex flex-wrap gap-2">
-                <span
-                  v-for="(label, i) in service.labels"
-                  :key="i"
-                  class="backdrop-blur-sm bg-[#e4299c]/20 text-[#e4299c] px-3 py-1 rounded-full text-xs font-semibold border border-[#e4299c]/30"
-                >
-                  {{ label }}
-                </span>
+                <!-- Labels -->
+                <div v-if="service.labels?.length" class="flex flex-wrap gap-2">
+                  <span
+                    v-for="(label, i) in service.labels"
+                    :key="i"
+                    class="backdrop-blur-sm bg-[#e4299c]/20 text-[#e4299c] px-3 py-1 rounded-full text-xs font-semibold border border-[#e4299c]/30"
+                  >
+                    {{ label }}
+                  </span>
+                </div>
               </div>
-            </div>
-          </Link>
+            </Link>
+          </div>
         </div>
       </div>
     </section>

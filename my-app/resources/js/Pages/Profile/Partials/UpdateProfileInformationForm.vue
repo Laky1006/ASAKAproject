@@ -4,6 +4,7 @@ import InputLabel from '@/Components/basics/InputLabel.vue';
 import PrimaryButton from '@/Components/basics/PrimaryButton.vue';
 import TextInput from '@/Components/basics/TextInput.vue';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 defineProps({
     mustVerifyEmail: {
@@ -27,15 +28,33 @@ const form = useForm({
     bio: user.provider?.bio || '',
 });
 
+const fileSelected = ref(false);
+const selectedFileName = ref('');
+
 function handlePhotoChange(event) {
     form.profile_photo = event.target.files[0];
+    
+    if (event.target.files[0]) {
+        fileSelected.value = true;
+        selectedFileName.value = event.target.files[0].name;
+        
+        setTimeout(() => {
+            fileSelected.value = false;
+        }, 3000);
+    }
 }
+
 
 function submitForm() {
     form.post(route('profile.update'), {
         preserveScroll: true,
         forceFormData: true,
-        onSuccess: () => form.reset('profile_photo'),
+        onSuccess: () => {
+            form.reset('profile_photo');
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        },
     });
 }
 </script>
@@ -89,6 +108,27 @@ function submitForm() {
 
                 <InputError :message="form.errors.profile_photo" class="mt-2" />
             </div>
+
+            <!-- File Selection Confirmation Message -->
+            <Transition
+                enter-active-class="transition ease-in-out duration-300"
+                enter-from-class="opacity-0 translate-y-2"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition ease-in-out duration-300"
+                leave-to-class="opacity-0 translate-y-2"
+            >
+                <div
+                    v-if="fileSelected"
+                    class="backdrop-blur-sm bg-green-100/80 border border-green-200 rounded-xl p-4 mb-4"
+                >
+                    <p class="text-sm text-green-800 font-body flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        File "{{ selectedFileName }}" selected successfully! Ready to upload.
+                    </p>
+                </div>
+            </Transition>
 
             <!-- Username -->
             <div>
