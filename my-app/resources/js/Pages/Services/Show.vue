@@ -302,7 +302,7 @@ function handleConfirm() {
   confirmHandler = null
 }
 
-// scroll highlight
+// scroll highlight with header offset
 onMounted(async () => {
   const hash = window.location.hash
   const urlParams = new URLSearchParams(window.location.search)
@@ -311,13 +311,18 @@ onMounted(async () => {
   if (reviewId) {
     await nextTick()
     const el = document.getElementById(`review-${reviewId}`)
+    const offset = 300
+
     if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      const top = el.getBoundingClientRect().top + window.scrollY - offset
+      window.scrollTo({ top, behavior: 'smooth' })
+
       el.classList.add('ring-2', 'ring-blue-400', 'rounded-lg')
       setTimeout(() => el.classList.remove('ring-2', 'ring-blue-400'), 2000)
     }
   }
 })
+
 
 // SLOTS
 // Provider preview expects all slots with availability; public shows only available.
