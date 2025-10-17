@@ -82,12 +82,14 @@
               >
                 <span class="text-sm font-semibold text-[#2D1810]">{{ slot.displayTime }}</span>
                 <button
-                  type="button"
-                  class="text-red-600 text-sm hover:underline font-semibold"
-                  @click="emitRemove(slot.time)"
-                >
-                  Remove
-                </button>
+      type="button"
+      class="text-red-600 text-sm hover:underline font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+      :disabled="slot.available === false"
+      @click="emitRemove(slot.time)"
+      :title="slot.available === false ? 'Booked slots can’t be removed' : 'Remove this time'"
+    >
+      Remove
+    </button>
               </div>
             </div>
 

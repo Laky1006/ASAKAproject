@@ -382,6 +382,7 @@ class ServiceController extends Controller
                 'slots' => $service->slots->map(fn($slot) => [
                     'date' => $slot->date->format('Y-m-d'),
                     'time' => $slot->time,
+                    'available' => (bool) $slot->is_available,
                 ]),
                 'labels' => $service->labels ?? [],
             ],
@@ -398,7 +399,7 @@ class ServiceController extends Controller
         abort(403);
     }
 
-    // Validate fields + incoming slots (date/time as strings; we'll normalize time)
+    // Validate fields + incoming slots
     $validated = $request->validate([
         'title'                  => 'required|string|max:255',
         'description'            => 'required|string',
@@ -409,70 +410,67 @@ class ServiceController extends Controller
         'labels.*'               => 'string|max:50',
         'available_slots'        => 'array',
         'available_slots.*.date' => 'required|date_format:Y-m-d',
-        'available_slots.*.time' => 'required|string', // e.g. "09:00" or "09:00:00"
+        'available_slots.*.time' => 'required|string', // "09:00" / "09:00:00"
     ]);
 
-    // Helper to build a consistent key "YYYY-mm-dd HH:ii"
+    // Build a consistent key "YYYY-mm-dd HH:ii"
     $slotKey = function ($date, $time) {
-        $d = is_object($date) && method_exists($date, 'format')
-            ? $date->format('Y-m-d')
-            : (string) $date;
-
+        $d = is_object($date) && method_exists($date, 'format') ? $date->format('Y-m-d') : (string) $date;
         $t = trim((string) $time);
-        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $t)) {
-            $t = substr($t, 0, 5);      // 09:00:00 -> 09:00
-        } elseif (preg_match('/^\d{1}:\d{2}$/', $t)) {
-            $t = '0' . $t;              // 9:00 -> 09:00
-        } elseif (!preg_match('/^\d{2}:\d{2}$/', $t)) {
-            try { $t = \Carbon\Carbon::parse($t)->format('H:i'); } catch (\Throwable $e) {}
-        }
-
+        if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $t))        $t = substr($t, 0, 5); // 09:00:00 -> 09:00
+        elseif (preg_match('/^\d{1}:\d{2}$/', $t))          $t = '0'.$t;           // 9:00 -> 09:00
+        elseif (!preg_match('/^\d{2}:\d{2}$/', $t)) { try { $t = \Carbon\Carbon::parse($t)->format('H:i'); } catch (\Throwable $e) {} }
         return "{$d} {$t}";
     };
 
-    // Normalize incoming slots to unique keys
+    // Normalize incoming slots and dedupe
     $incoming = collect($request->input('available_slots', []))
         ->map(function ($s) use ($slotKey) {
             $date = $s['date'];
             $time = trim($s['time']);
-            if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $time)) {
-                $time = substr($time, 0, 5);
-            } elseif (preg_match('/^\d{1}:\d{2}$/', $time)) {
-                $time = '0' . $time;
-            }
-            return [
-                'date' => $date,
-                'time' => $time,                 // HH:MM
-                'key'  => $slotKey($date, $time),
-            ];
+            if (preg_match('/^\d{2}:\d{2}:\d{2}$/', $time))      $time = substr($time, 0, 5);
+            elseif (preg_match('/^\d{1}:\d{2}$/', $time))        $time = '0'.$time;
+            return ['date' => $date, 'time' => $time, 'key' => $slotKey($date, $time)];
         })
         ->unique('key')
         ->values();
 
     \Illuminate\Support\Facades\DB::transaction(function () use ($service, $request, $validated, $incoming, $slotKey) {
-        /* ---- Update main service fields ---- */
+        /* ------------ Update main fields ------------ */
         $service->title       = $validated['title'];
         $service->description = $validated['description'];
         $service->phone       = $validated['phone'];
         $service->labels      = $request->input('labels', []);
         $service->price       = $request->input('price');
-
         if ($request->hasFile('banner')) {
             $service->banner = $request->file('banner')->store('service-banners', 'public');
         }
         $service->save();
 
-        /* ---- Diff slots (preserve booked) ---- */
-        // Existing slots indexed by normalized key
-        $existing      = $service->slots; // already eager-loaded
-        $existingByKey = $existing->mapWithKeys(fn ($slot) => [
-            $slotKey($slot->date, $slot->time) => $slot
-        ]);
+        /* ------------ Diff slots (with block) -------- */
+        $existing      = $service->slots; // eager-loaded
+        $existingByKey = $existing->mapWithKeys(fn ($slot) => [ $slotKey($slot->date, $slot->time) => $slot ]);
 
         $incomingKeys = $incoming->pluck('key')->all();
         $incomingSet  = array_flip($incomingKeys);
 
-        // Delete only slots that are missing from incoming AND are unbooked
+        // A) BLOCK: provider tried to remove a booked slot
+        $blocked = $existing->filter(function ($slot) use ($incomingSet, $slotKey) {
+            $key     = $slotKey($slot->date, $slot->time);
+            $removed = !isset($incomingSet[$key]);
+            $booked  = ($slot->is_available === false) || !is_null($slot->reguser_id);
+            return $removed && $booked;
+        });
+
+        if ($blocked->isNotEmpty()) {
+            // Build a friendly error list (e.g., "2025-11-03 09:00, 2025-11-04 10:00")
+            $times = $blocked->map(fn($s) => $slotKey($s->date, $s->time))->implode(', ');
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'available_slots' => ["You cannot remove booked time(s): {$times}."],
+            ]);
+        }
+
+        // B) Delete only removed & unbooked
         $toDelete = $existing->filter(function ($slot) use ($incomingSet, $slotKey) {
             $key     = $slotKey($slot->date, $slot->time);
             $missing = !isset($incomingSet[$key]);
@@ -484,7 +482,7 @@ class ServiceController extends Controller
             \App\Models\ServiceSlot::whereIn('id', $toDelete->pluck('id'))->delete();
         }
 
-        // Create new ones that don't exist yet
+        // C) Create genuinely new ones
         foreach ($incoming as $slot) {
             if (!isset($existingByKey[$slot['key']])) {
                 $service->slots()->create([
@@ -495,12 +493,12 @@ class ServiceController extends Controller
                 ]);
             }
         }
-
-        // Do NOT modify overlapping slots → preserves booked/unavailable states
+        // D) Do not touch overlapping slots → preserves booked/unavailable states
     });
 
     return redirect()->route('my-services')->with('success', 'Service updated.');
 }
+
 
 
     public function destroy($id)
