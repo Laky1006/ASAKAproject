@@ -7,7 +7,7 @@
         <div class="backdrop-blur-lg bg-white/80 p-6 sm:p-8 shadow-xl border border-white/60 rounded-2xl">
           <h1 class="text-3xl font-bold mb-8 text-[#2D1810]">Edit Service</h1>
 
-          <form @submit.prevent="submitForm" @keydown.enter.capture="blockEnterSubmit" class="space-y-6">
+          <form @submit.prevent="submitEditedForm" @keydown.enter.capture="blockEnterSubmit" class="space-y-6">
             <!-- Title -->
             <div>
               <InputLabel for="title" value="Service Title" />
@@ -204,7 +204,7 @@ function blockEnterSubmit(e) {
 }
 
 // Submit form
-function submitForm() {
+function submitEditedForm() {
   form.transform(data => ({ ...data, _method: 'PUT' }))
   form.post(route('services.update', props.service.id), {
     forceFormData: true,

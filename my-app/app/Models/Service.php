@@ -15,6 +15,7 @@ class Service extends Model
     protected $fillable = ['title', 'description', 'rating', 'provider_id', 'phone', 'banner'];
 
     protected $casts = [
+        'date' => 'date',
         'labels' => 'array',
     ];
 
