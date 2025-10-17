@@ -37,6 +37,7 @@ const closeModal = () => {
 </script>
 
 <template>
+    <!-- aaa -->
     <section class="backdrop-blur-xl bg-white/50 rounded-3xl shadow-2xl border border-white/70 p-8 sm:p-10">
         <header class="mb-6">
             <h2 class="text-3xl font-bold text-red-600 font-display">
