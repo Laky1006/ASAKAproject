@@ -10,4 +10,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('notify:inactive-users')
-    ->daily(); // or whichever frequency you want
+->dailyAt('12:50'); // or whichever frequency you want

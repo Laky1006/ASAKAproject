@@ -145,13 +145,23 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::delete('/admin-panel/users/{user}', [AdminPanelController::class, 'destroyUser'])
         ->name('admin-panel.users.destroy');
     
-    Route::delete('/admin-panel/services/{service}', [App\Http\Controllers\Admin\AdminPanelController::class, 'destroyService'])
+    Route::delete('/admin-panel/services/{service}', [AdminPanelController::class, 'destroyService'])
         ->name('admin-panel.services.destroy');
     
 
     Route::delete('/admin-panel/reports/{report}', [AdminPanelController::class, 'destroyReport'])
         ->name('admin-panel.reports.destroy');
 });
+
+Route::middleware(['auth', 'admin'])->post('/admin/run-inactive-users', function () {
+    // Run the command
+    Artisan::call('notify:inactive-users');
+
+    // Return a minimal JSON response
+    return response()->json([
+        'message' => 'Emails sent successfully!',
+    ]);
+})->name('admin.runInactiveUsers');
 
 
 // TOP SECRET PAGE
