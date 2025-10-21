@@ -237,48 +237,54 @@ class ServiceController extends Controller
     
     // works reguser booking ()
     public function book(Request $request, $serviceId)
-{
-    if (!auth()->user()?->reguser) {
-        session()->flash('debug', 'User is not a reguser');
-        return back();
-    }
-
-    $reguserId = auth()->user()->reguser->id;
-
-    $service = Service::with('provider.user')->findOrFail($serviceId);
-
-    $slot = ServiceSlot::where('service_id', $serviceId)
-        ->where('date', $request->date)
-        ->where('time', $request->time)
-        ->where('is_available', true)
-        ->first();
-
-    if (!$slot) {
-        session()->flash('debug', 'Slot not found or already booked');
-        return back();
-    }
-
-    $slot->is_available = false;
-    $slot->reguser_id = $reguserId;
-    $slot->save();
-
-    session()->flash('success', 'You have signed up for this service!');
-    session()->flash('debug', "Booked slot ID: {$slot->id}, reguser ID: {$reguserId}");
-
+    {
+        if (!auth()->user()?->reguser) {
+            session()->flash('debug', 'User is not a reguser');
+            return back();
+        }
     
-    Notification::create([
-        'user_id' => $service->provider->user->id,
-        'type' => 'service_booked',
-        'service_id' => $service->id,
-        'service_title' => $service->title,
-        'reguser_id' => $reguserId,
-        'reguser_name' => auth()->user()->name,
-        'date' => $request->date,
-        'time' => $request->time,
-    ]);
-
-    return back();
-}
+        $reguser = auth()->user()->reguser;
+    
+        $service = Service::with('provider.user')->findOrFail($serviceId);
+    
+        $slot = ServiceSlot::where('service_id', $serviceId)
+            ->where('date', $request->date)
+            ->where('time', $request->time)
+            ->where('is_available', true)
+            ->first();
+    
+        if (!$slot) {
+            session()->flash('debug', 'Slot not found or already booked');
+            return back();
+        }
+    
+        // Book the slot
+        $slot->is_available = false;
+        $slot->reguser_id = $reguser->id;
+        $slot->save();
+    
+        // Update the user's last booking date
+        $reguser->last_booking_at = now();
+        $reguser->save();
+    
+        // Notify provider
+        Notification::create([
+            'user_id'       => $service->provider->user->id,
+            'type'          => 'service_booked',
+            'service_id'    => $service->id,
+            'service_title' => $service->title,
+            'reguser_id'    => $reguser->id,
+            'reguser_name'  => auth()->user()->name,
+            'date'          => $request->date,
+            'time'          => $request->time,
+        ]);
+    
+        session()->flash('success', 'You have signed up for this service!');
+        session()->flash('debug', "Booked slot ID: {$slot->id}, reguser ID: {$reguser->id}");
+    
+        return back();
+    }
+    
 
     // get only the services this tsudent has signed up for
 
