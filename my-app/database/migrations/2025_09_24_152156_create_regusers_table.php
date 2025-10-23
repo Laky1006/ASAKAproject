@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('regusers', function (Blueprint $table) {
             $table->id();
+            $table->timestamp(column: 'last_booking_at')->nullable();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });

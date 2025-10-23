@@ -19,6 +19,7 @@ class AdminUserSeeder extends Seeder
                 'username' => 'admin',          // must be unique in your DB
                 'password' => Hash::make('Admin!123'),
                 'role' => 'admin',
+                'email_verified_at' => now(),
             ]
         );
     }

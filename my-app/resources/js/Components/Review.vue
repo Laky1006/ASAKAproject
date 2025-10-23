@@ -1,5 +1,6 @@
 <template>
   <div
+    :id="`review-${review.id}`" 
     class="relative border rounded-2xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200"
   >
     <!-- Header: avatar + name + report button + delete -->
