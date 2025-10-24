@@ -3,7 +3,7 @@
     <section class="max-w-7xl mx-auto py-10 px-6">
       <h1 class="text-2xl font-bold mb-6">My Services</h1>
 
-      <!-- New Service Button -->
+      <!-- New  Button -->
       <div class="mb-6">
         <Link
           :href="route('services.create')"
