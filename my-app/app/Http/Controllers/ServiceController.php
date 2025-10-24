@@ -192,7 +192,7 @@ class ServiceController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'required|string|max:20',
             'available_slots' => 'nullable|array',
             'available_slots.*.date' => 'required_with:available_slots|date',
             'available_slots.*.time' => 'required_with:available_slots|date_format:H:i',

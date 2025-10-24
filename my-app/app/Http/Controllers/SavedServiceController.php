@@ -86,30 +86,30 @@ class SavedServiceController extends Controller
 
     // Create a new folder
     public function createFolder(Request $request)
-        {
-            $validated = $request->validate([
-                'folder_name' => 'required|string|max:255',
-            ]);
+    {
+        $validated = $request->validate([
+            'folder_name' => 'required|string|max:255',
+        ]);
 
-            $user = auth()->user();
-            $folderName = trim($validated['folder_name']);
+        $user = auth()->user();
+        $folderName = trim($validated['folder_name']);
 
-            // Check if folder already exists
-            $exists = SavedService::where('user_id', $user->id)
-                ->where('folder_name', $folderName)
-                ->exists();
+        // Check if folder already exists
+        $exists = SavedService::where('user_id', $user->id)
+            ->where('folder_name', $folderName)
+            ->exists();
 
-            if ($exists) {
-                return back()->withErrors(['error' => 'Folder already exists.']);
-            }
+        if ($exists) {
+            return back()->withErrors(['error' => 'Folder already exists.']);
+        }
 
-    // Store new folder in session temporarily
-    $newFolders = session('new_folders', []);
-    $newFolders[] = $folderName;
-    session(['new_folders' => $newFolders]);
+        // Store new folder in session temporarily
+        $newFolders = session('new_folders', []);
+        $newFolders[] = $folderName;
+        session(['new_folders' => $newFolders]);
 
-    return back()->with('success', 'Folder "' . $folderName . '" created successfully!');
-}
+        return back()->with('success', 'Folder "' . $folderName . '" created successfully!');
+    }
 
 
 // Rename a folder
