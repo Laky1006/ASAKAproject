@@ -115,7 +115,7 @@ function toggleSave(service) {
 
       <!-- PROVIDERS TAB -->
       <div v-if="activeTab==='providers'">
-        <!-- Search bar - Glassmorphic -->
+        <!-- Search bar -->
         <div class="mb-8">
           <input
             v-model="providerQuery"

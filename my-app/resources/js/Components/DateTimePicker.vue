@@ -82,14 +82,14 @@
               >
                 <span class="text-sm font-semibold text-[#2D1810]">{{ slot.displayTime }}</span>
                 <button
-      type="button"
-      class="text-red-600 text-sm hover:underline font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-      :disabled="slot.available === false"
-      @click="emitRemove(slot.time)"
-      :title="slot.available === false ? 'Booked slots can’t be removed' : 'Remove this time'"
-    >
-      Remove
-    </button>
+                  type="button"
+                  class="text-red-600 text-sm hover:underline font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  :disabled="slot.available === false"
+                  @click="emitRemove(slot.time)"
+                  :title="slot.available === false ? 'Booked slots can’t be removed' : 'Remove this time'"
+                >
+                  Remove
+                </button>
               </div>
             </div>
 
@@ -99,7 +99,7 @@
           </div>
         </div>
 
-        <!-- PROVIDER: PREVIEW (read-only, shows all) -->
+        <!-- PROVIDER: PREVIEW (read-only, filtered to future times) -->
         <div v-else-if="props.variant === 'provider' && props.readonly" class="space-y-4">
           <div class="text-lg font-semibold mb-3 text-[#2D1810]">
             Schedule preview on
@@ -115,8 +115,8 @@
                 type="button"
                 class="px-3 py-2.5 backdrop-blur-sm border rounded-xl text-center font-semibold text-sm transition-all duration-200"
                 :class="[
-                  slot.available 
-                    ? 'bg-green-50/80 border-green-400 text-green-700 hover:bg-green-100/80' 
+                  slot.available
+                    ? 'bg-green-50/80 border-green-400 text-green-700 hover:bg-green-100/80'
                     : 'bg-gray-100/80 border-gray-300 text-gray-400 line-through',
                   selectedPreviewTime === slot.time ? 'ring-2 ring-[#e4299c]' : ''
                 ]"
@@ -141,7 +141,7 @@
           </div>
         </div>
 
-        <!-- APPLICANT (existing) -->
+        <!-- APPLICANT (filtered to available future times) -->
         <div v-else class="space-y-4">
           <div class="text-lg font-semibold mb-3 text-[#2D1810]">
             Available times on
@@ -150,9 +150,9 @@
           </div>
 
           <div v-if="selectedDate">
-            <div v-if="daySlots.length" class="grid grid-cols-2 gap-2">
+            <div v-if="applicantSlots.length" class="grid grid-cols-2 gap-2">
               <button
-                v-for="slot in daySlots"
+                v-for="slot in applicantSlots"
                 :key="slot.time"
                 type="button"
                 class="px-3 py-2.5 backdrop-blur-sm bg-white/60 border border-white/60 rounded-xl hover:bg-white/80 transition-all duration-200 font-semibold text-sm text-[#2D1810]"
@@ -175,14 +175,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import DatePicker from '@vuepic/vue-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
 
 const props = defineProps({
   variant: { type: String, default: 'provider' },          // 'provider' | 'applicant'
-  readonly: { type: Boolean, default: false },             // NEW: provider preview
-  showUnavailable: { type: Boolean, default: false },      // NEW: show booked too
+  readonly: { type: Boolean, default: false },             // provider preview
+  showUnavailable: { type: Boolean, default: false },      // show booked too
   weekStartsOn: { type: Number, default: 1 },
   step: { type: Number, default: 60 },
   minDate: { type: String, default: null },
@@ -191,7 +191,7 @@ const props = defineProps({
   modelValue: { type: Object, default: null },
 })
 
-const emit = defineEmits(['add-slot', 'remove-slot', 'update:slots', 'update:modelValue', 'select-slot-preview',])
+const emit = defineEmits(['add-slot', 'remove-slot', 'update:slots', 'update:modelValue', 'select-slot-preview'])
 
 // state
 const selectedDate = ref('')
@@ -209,12 +209,31 @@ const monthNames = [
 // helpers
 function pad(n) { return n < 10 ? `0${n}` : `${n}` }
 function ymd(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` }
+function hmToMinutes(hhmm){ const [h,m] = hhmm.split(':').map(Number); return h*60 + m }
+
+// reactive "now" that ticks each minute
+const now = ref(new Date())
+let _tick = null
+onMounted(() => { _tick = setInterval(() => (now.value = new Date()), 60 * 1000) })
+onBeforeUnmount(() => { if (_tick) clearInterval(_tick) })
+
+const nowYMD = computed(() => ymd(now.value))
+const nowHM  = computed(() => `${pad(now.value.getHours())}:${pad(now.value.getMinutes())}`)
+
+// is this {date,time} in the past?
+function isPast(date, time){
+  if (!date || !time) return false
+  if (date < nowYMD.value) return true
+  if (date > nowYMD.value) return false
+  // same day: hide times <= current minute (09:00 disappears at 09:01)
+  return hmToMinutes(time) <= hmToMinutes(nowHM.value)
+}
 
 // min/disabled dates
 const todayISO = computed(() => {
   if (props.minDate) return new Date(props.minDate + 'T00:00:00')
-  const now = new Date()
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const nowLocal = new Date()
+  return new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate())
 })
 
 const disabledDatesParsed = computed(() =>
@@ -255,14 +274,19 @@ const daySlots = computed(() => {
     .sort((a, b) => a.time.localeCompare(b.time))
 })
 
-// provider preview visible slots list
+// provider preview visible slots list (respect showUnavailable, then drop past)
 const previewSlots = computed(() => {
-  return props.showUnavailable ? daySlots.value : daySlots.value.filter(s => s.available)
+  const base = props.showUnavailable ? daySlots.value : daySlots.value.filter(s => s.available)
+  return base.filter(s => !isPast(selectedDate.value, s.time))
 })
+
+// applicant-facing list: only available future times
+const applicantSlots = computed(() =>
+  daySlots.value.filter(s => s.available && !isPast(selectedDate.value, s.time))
+)
 
 function selectPreviewSlot(slot) {
   selectedPreviewTime.value = slot.time
-  // Send { date, time, available, reguser_name? } up to the parent
   emit('select-slot-preview', {
     date: selectedDate.value,
     time: slot.time,
@@ -327,11 +351,12 @@ function clearTime() {
   timeModel.value = null
 }
 
-// Emit add-slot { date, time } in 24h HH:mm
+// Emit add-slot { date, time } in 24h HH:mm (block past)
 function emitAdd() {
   if (!selectedDate.value || !timeModel.value) return
   const { hours = 0, minutes = 0 } = timeModel.value
   const time = `${pad(hours)}:${pad(minutes)}`
+  if (isPast(selectedDate.value, time)) return
   addSlot({ date: selectedDate.value, time })
 }
 
