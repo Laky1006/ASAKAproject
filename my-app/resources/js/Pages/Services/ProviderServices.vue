@@ -26,6 +26,7 @@
       alt="Service banner"
       class="w-full h-40 object-cover"
     />
+    
     <div class="p-4">
       <h2 class="text-xl font-semibold mb-1">{{ service.title }}</h2>
       <p class="text-sm text-gray-600 mb-2">
