@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
+import PopupConfirm from '@/Components/PopupConfirm.vue'
 
 const props = defineProps({
   auth: Object,
@@ -39,8 +40,24 @@ watch(() => props.services, (newVal) => {
   servicesList.value = newVal.data
 })
 
-const confirmDelete = (s) => {
-  if (!window.confirm(`Delete service "${s.title}" (ID: ${s.id})?`)) return
+/* -------------------- Popup Delete Flow -------------------- */
+const showDelete = ref(false)
+const serviceToDelete = ref(null)
+
+const openDeletePopup = (s) => {
+  serviceToDelete.value = s
+  showDelete.value = true
+}
+
+const deleteMessage = computed(() =>
+  serviceToDelete.value
+    ? `Delete service "${serviceToDelete.value.title}" (ID: ${serviceToDelete.value.id})?`
+    : ''
+)
+
+const performDelete = () => {
+  const s = serviceToDelete.value
+  if (!s) return
   deletingId.value = s.id
 
   router.delete(route('admin-panel.services.destroy', s.id), {
@@ -48,9 +65,11 @@ const confirmDelete = (s) => {
     onFinish: () => {
       deletingId.value = null
       servicesList.value = servicesList.value.filter(x => x.id !== s.id)
+      serviceToDelete.value = null
     },
   })
 }
+/* ----------------------------------------------------------- */
 </script>
 
 <template>
@@ -94,7 +113,7 @@ const confirmDelete = (s) => {
             <td class="px-4 sm:px-6 py-3 text-sm text-[#6b5b73] hidden lg:table-cell">{{ new Date(s.created_at).toLocaleString() }}</td>
             <td class="px-4 sm:px-6 py-3">
               <button
-                @click="confirmDelete(s)"
+                @click="openDeletePopup(s)"
                 class="px-3 py-1.5 text-xs rounded-lg bg-red-500/80 backdrop-blur-sm text-white hover:bg-red-600 disabled:opacity-50 transition-all duration-200 font-semibold"
                 :disabled="deletingId === s.id"
               >
@@ -126,4 +145,12 @@ const confirmDelete = (s) => {
       />
     </div>
   </div>
+
+  <!-- Popup Confirm -->
+  <PopupConfirm
+    v-model:show="showDelete"
+    title="Please Confirm"
+    :message="deleteMessage"
+    @confirm="performDelete"
+  />
 </template>

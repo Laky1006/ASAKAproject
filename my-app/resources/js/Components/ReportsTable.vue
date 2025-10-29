@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
+import PopupConfirm from '@/Components/PopupConfirm.vue'
 
 const props = defineProps({
   auth: Object,
@@ -11,7 +12,7 @@ const props = defineProps({
 // Filters
 const search = ref(props.filters?.search || '')
 const sort = ref(props.filters?.sort || 'id_desc')
-const type = ref(props.filters?.type || '') // 🆕 Add type filter
+const type = ref(props.filters?.type || '')
 
 const sortOptions = {
   id_desc: 'ID ↓',
@@ -34,7 +35,7 @@ const pushQuery = () => {
       tab: 'reports',
       search: search.value || undefined,
       sort: sort.value || undefined,
-      type: type.value || undefined, // 🆕 Include type in query
+      type: type.value || undefined,
     }, { preserveState: true, replace: true })
   }, 300)
 }
@@ -50,19 +51,36 @@ watch(() => props.reports, (newVal) => {
   reportsList.value = newVal.data
 })
 
-// Delete report
-const confirmDelete = (r) => {
-  if (!window.confirm(`Delete report #${r.id}? This cannot be undone.`)) return
+/* -------------------- Popup Delete Flow -------------------- */
+const showDelete = ref(false)
+const reportToDelete = ref(null)
+
+const openDeletePopup = (r) => {
+  reportToDelete.value = r
+  showDelete.value = true
+}
+
+const deleteMessage = computed(() =>
+  reportToDelete.value
+    ? `Delete report #${reportToDelete.value.id}? This cannot be undone.`
+    : ''
+)
+
+const performDelete = () => {
+  const r = reportToDelete.value
+  if (!r) return
   deletingId.value = r.id
 
   router.delete(route('admin-panel.reports.destroy', r.id), {
     preserveScroll: true,
     onFinish: () => {
       deletingId.value = null
+      reportToDelete.value = null
       router.reload({ only: ['reports'] })
     },
   })
 }
+/* ----------------------------------------------------------- */
 </script>
 
 <template>
@@ -83,7 +101,6 @@ const confirmDelete = (r) => {
         </option>
       </select>
 
-      <!-- 🆕 Type Filter -->
       <select v-model="type" class="border border-white/40 rounded-lg px-3 py-2 text-sm backdrop-blur-sm bg-white/50 focus:bg-white/70 focus:ring-2 focus:ring-[#e4299c] transition-all w-full sm:w-auto">
         <option v-for="(label, key) in typeOptions" :key="key" :value="key">
           {{ label }}
@@ -111,7 +128,7 @@ const confirmDelete = (r) => {
             <td class="px-4 sm:px-6 py-3 text-sm text-[#6b5b73] font-medium">{{ r.id }}</td>
             <td class="px-4 sm:px-6 py-3 text-sm font-semibold text-[#2D1810]">{{ r.user?.name || 'Unknown' }}</td>
 
-            <!-- 🔗 Target -->
+            <!-- Target -->
             <td class="px-4 sm:px-6 py-3 text-sm text-[#e4299c] font-medium">
               <Link
                 v-if="r.service"
@@ -130,7 +147,7 @@ const confirmDelete = (r) => {
               <span v-else class="text-gray-400">—</span>
             </td>
 
-            <!-- 🆕 Type Badge -->
+            <!-- Type Badge -->
             <td class="px-4 sm:px-6 py-3 text-sm">
               <span
                 :class="[
@@ -153,7 +170,7 @@ const confirmDelete = (r) => {
 
             <td class="px-4 sm:px-6 py-3">
               <button
-                @click="confirmDelete(r)"
+                @click="openDeletePopup(r)"
                 class="px-3 py-1.5 text-xs rounded-lg bg-red-500/80 backdrop-blur-sm text-white hover:bg-red-600 disabled:opacity-50 transition-all duration-200 font-semibold"
                 :disabled="deletingId === r.id"
               >
@@ -187,4 +204,12 @@ const confirmDelete = (r) => {
       />
     </div>
   </div>
+
+  <!-- Popup Confirm -->
+  <PopupConfirm
+    v-model:show="showDelete"
+    title="Please Confirm"
+    :message="deleteMessage"
+    @confirm="performDelete"
+  />
 </template>

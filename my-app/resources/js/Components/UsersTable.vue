@@ -1,6 +1,7 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { router, Link } from '@inertiajs/vue3'
+import PopupConfirm from '@/Components/PopupConfirm.vue'
 
 const props = defineProps({
   auth: Object,
@@ -45,16 +46,30 @@ const roleBadge = (r) => ({
 }[r] || 'bg-gray-200/60 text-gray-800 backdrop-blur-sm')
 
 const deletingId = ref(null)
-
 const usersList = ref(props.users.data)
 watch(() => props.users, (newVal) => {
   usersList.value = newVal.data
 })
 
-const confirmDelete = (u) => {
-  if (u.id === (props.auth?.user?.id || 0)) return
-  if (!window.confirm(`Delete user "${u.name}" (ID: ${u.id})? This cannot be undone.`)) return
+/* -------------------- Popup Delete Flow -------------------- */
+const showDelete = ref(false)
+const userToDelete = ref(null)
 
+const openDeletePopup = (u) => {
+  if (u.id === (props.auth?.user?.id || 0)) return
+  userToDelete.value = u
+  showDelete.value = true
+}
+
+const deleteMessage = computed(() =>
+  userToDelete.value
+    ? `Delete user "${userToDelete.value.name}" (ID: ${userToDelete.value.id})? This cannot be undone.`
+    : ''
+)
+
+const performDelete = () => {
+  const u = userToDelete.value
+  if (!u) return
   deletingId.value = u.id
 
   router.delete(route('admin-panel.users.destroy', u.id), {
@@ -62,9 +77,11 @@ const confirmDelete = (u) => {
     onFinish: () => {
       deletingId.value = null
       usersList.value = usersList.value.filter(user => user.id !== u.id)
+      userToDelete.value = null
     },
   })
 }
+/* ----------------------------------------------------------- */
 </script>
 
 <template>
@@ -120,7 +137,7 @@ const confirmDelete = (u) => {
             <td class="px-4 sm:px-6 py-3 text-sm text-[#6b5b73] hidden lg:table-cell">{{ new Date(u.created_at).toLocaleString() }}</td>
             <td class="px-4 sm:px-6 py-3">
               <button
-                @click="confirmDelete(u)"
+                @click="openDeletePopup(u)"
                 class="px-3 py-1.5 text-xs rounded-lg bg-red-500/80 backdrop-blur-sm text-white hover:bg-red-600 disabled:opacity-50 transition-all duration-200 font-semibold"
                 :disabled="deletingId === u.id || u.id === auth?.user?.id"
                 :title="u.id === auth?.user?.id ? 'You cannot delete yourself' : 'Delete user'"
@@ -152,4 +169,12 @@ const confirmDelete = (u) => {
       />
     </div>
   </div>
+
+  <!-- Popup confirm -->
+  <PopupConfirm
+    v-model:show="showDelete"
+    title="Please Confirm"
+    :message="deleteMessage"
+    @confirm="performDelete"
+  />
 </template>
